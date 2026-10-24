@@ -1,0 +1,27 @@
+package dev.materialshare.common;
+
+import java.util.Optional;
+
+/**
+ * The server and the client must run the same protocol: an old client would silently ignore packets it does not know
+ * (it would simply never see other players' edits). The versions are compared when the player logs in.
+ */
+public final class ProtocolCheck {
+    /** Bump when packets change. 1 = whole-project updates, 2 = per-item updates, create refusals, name lookups, 3 = notes, history, bulk assignment, 4 = chunked bulk packets, inventory import, 5 = archive flag, trash, 6 = deadline, item priority and location, 7 = renamed channels, 8 = shares, hand-in, transfers, copies, activity feed, 9 = progress readings for the finish estimate, 10 = shared spare items, 11 = reset of assignments, deleted items that can be restored, 12 = reset of one player's assignments, 13 = no storage place memo, 14 = storage boxes with chest contents and who handed items in, last-action times, 15 = what lies inside shulker boxes is counted separately, 16 = the finish-time estimate was taken out. */
+    public static final int PROTOCOL_VERSION = 16;
+    /** What an old client (which sent nothing) counts as. */
+    public static final int UNKNOWN = 0;
+
+    private ProtocolCheck() {
+    }
+
+    public static Optional<String> problem(int server, int client) {
+        if (server == client) {
+            return Optional.empty();
+        }
+        String clientText = client == UNKNOWN ? "古い版 / an older version" : String.valueOf(client);
+        return Optional.of("Litematica MaterialShare の版が、サーバーと合っていません(サーバー: " + server + " / あなた: " + clientText
+                + ")。サーバーと同じ版の jar を入れてください。 / Litematica MaterialShare does not match the server (server: "
+                + server + ", you: " + clientText + "). Install the same version as the server.");
+    }
+}

@@ -1,0 +1,22 @@
+## 0.10.0
+
+- Sub-regions can be shared part by part from the schematic screen (several parts at once, or all).
+- "+N" next to the names: a button opens everybody who takes the item (remove people, change their amounts with the wheel).
+- New "Missing items" screen and a "one person" row filter.
+- Reset assignments for everything, for one person or for one item; deleted items can be restored.
+- Offline players: names and skins from Mojang.
+- Japanese text wraps at any character; texts that did not fit are shortened with "…" and the important part stays.
+- The mouse wheel no longer presses buttons on the add-on's screens.
+- Server config file with the limit of shared schematics.
+- Storage boxes: register where the chests are (up to 16 boxes per schematic, set with two corner keys), see them in the world as coloured boxes that follow the selected schematic, see what the chests hold, and get credited automatically when you put items you are assigned to into them.
+- Not-active hint: people who did nothing for 3 days are marked in the stats and the missing-items list.
+- Totals per material over all your schematics ("My totals"); the on-screen list is on by default; a notice when somebody takes you off an item; first-time tips.
+- A how-to with pictures of the real screens, always available (Litematica main menu, tools, hotkey).
+- Storage: a clickable chat line after marking both corners, live updates while a chest is open, chests that already hold items count, and what lies inside shulker boxes is counted (with stacks). The on-screen list is at the bottom right by default and shows handed-in and stored amounts; rows show "stored N".
+- The on-screen list (HUD) can be dragged anywhere (settings > "Set the HUD place"); the bottom right is the default. Shulker boxes with contents are no longer listed as a separate item in the storage contents.
+- Storage boxes also count hoppers, droppers, dispensers, brewing stands, lecterns and jukeboxes besides chests, barrels and shulker boxes.
+- Removed the "time left" estimate.
+- Fixed: a count changed with the mouse wheel was pushed back to the number of items carried by "Update my collected counts automatically". Now only items picked up since the last look are added.
+- Storage corner marks can be cleared ([Clear marks] button, hotkey, or /materialshare storage clear).
+- Protocol 16: the server and every client need this version.
+- Removed: location memo, project overview screen, login message in the chat.

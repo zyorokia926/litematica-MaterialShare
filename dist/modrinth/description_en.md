@@ -1,0 +1,58 @@
+# Litematica MaterialShare
+
+**An add-on for Litematica that shows who collects which material, and how much, to everybody on the server.**
+(Fabric / Minecraft 1.19.4)
+
+*Unofficial add-on, not affiliated with the authors of Litematica.*
+
+Building together, you keep asking "who takes the redstone?" and "how many oak logs are still missing?" in chat.
+This add-on puts **who takes an item and how much they have collected** right into each row of Litematica's material list, the same for every player.
+
+## Features
+
+- **Take items per row**: "Take / Drop" for yourself, "+" to assign somebody else (offline players can be found by part of their name).
+- **Amounts per person**: turn the mouse wheel over a name to change the collected amount (Shift for bigger steps). Targets and hand-ins to a storage are recorded too.
+- **See what is missing**: the "Missing items" screen lists the items nobody takes first, then the biggest gaps.
+- **Filters**: mine / nobody / unfinished / priority / not mine / not enough people / one person.
+- **Bulk assign**: hands out the items nobody takes to the people you choose, balanced by amount *and* kind. Reset everything, one person or one item.
+- **Sub-regions**: a schematic with several parts can be shared part by part.
+- **History and undo**: who did what is kept; deleted schematics and items can be restored from the trash.
+- **Progress**: stats, HUD, notifications for completed and assigned items. People who did nothing for 3 days are marked.
+- **Storage boxes**: register where your chests are (up to 16 areas); they are drawn in the world as coloured boxes, the chests are counted, and putting items you are assigned to into them is recorded as handed in.
+- **A how-to screen** with pictures of the real screens, always available.
+- **Raw material map**: what it takes to craft the items, as a colour-coded map.
+- **Spare items, importing what you carry, copying progress (for Discord and more).**
+- **Faces and names**: players who are not on the server are looked up at Mojang for their name and skin.
+- Japanese and English.
+
+## Installation
+
+| Where | What you need |
+|---|---|
+| Server | Fabric Loader 0.14.21+, Fabric API 0.76.0+, **this mod** (Litematica is not needed) |
+| Client | The same, plus **Litematica** (0.14.2 or newer, older than 0.15.0), **malilib** (0.15.2 or newer, older than 0.16.0) and **Syncmatica** |
+
+- Put the same jar on the server **and** on every client.
+- A schematic must be **shared with Syncmatica** to be tracked; open its material list and tracking starts by itself.
+- Optional: Mod Menu (opens the settings).
+- The settings screen is also in Litematica's main menu.
+
+## How to use
+
+1. Share the schematic with Syncmatica and open its material list in Litematica.
+2. Start tracking with the button at the top right ("Start sharing" or "Schematic: ...").
+3. Decide who takes what in the right-hand column of each row. "Tools" at the top has bulk assigning, stats, history and more.
+
+## For server owners
+
+`config/litematica_materialshare_server.json` is created on the first start.
+
+| Key | Meaning |
+|---|---|
+| `maxProjects` | How many schematics can be shared at once (1-64). Default 64 |
+
+Data is stored in the world. Everybody with the mod sees all schematics and can edit them (every action is in the history).
+
+## Compatibility
+
+Litematica / malilib screens are only extended with mixin `@Inject`s; nothing of other mods is overwritten. Tested together with Sodium, Sodium Extra and Reese's Sodium Options. Buttons do not overlap at any GUI scale.

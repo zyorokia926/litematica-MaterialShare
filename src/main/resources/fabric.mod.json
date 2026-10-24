@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "litematica_materialshare",
+  "version": "${version}",
+  "name": "Litematica MaterialShare",
+  "description": "An add-on for Litematica: share who is collecting what from the material list (requires Litematica, malilib and Syncmatica).",
+  "authors": [
+    "zyorokia926"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/litematica-materialshare",
+    "sources": "https://github.com/zyorokia926/litematica-MaterialShare",
+    "issues": "https://github.com/zyorokia926/litematica-MaterialShare/issues"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/litematica_materialshare/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "preLaunch": [
+      "dev.materialshare.MaterialSharePreLaunch"
+    ],
+    "main": [
+      "dev.materialshare.MaterialShare"
+    ],
+    "client": [
+      "dev.materialshare.client.ClientNet"
+    ],
+    "modmenu": [
+      "dev.materialshare.client.compat.ModMenuImpl"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "litematica_materialshare.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": "1.19.4",
+    "java": ">=17",
+    "fabric-api": ">=0.76.0",
+    "malilib": "*",
+    "syncmatica": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

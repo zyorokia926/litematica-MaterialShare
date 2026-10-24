@@ -1,0 +1,18 @@
+{
+  "required": false,
+  "package": "dev.materialshare.client.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "GuiBaseAccessor",
+    "GuiBaseWheelMixin",
+    "GuiMainMenuMixin",
+    "GuiMaterialListMixin",
+    "MaterialListPlacementMixin",
+    "WidgetListBaseMixin",
+    "WidgetListMaterialListMixin",
+    "WidgetMaterialListEntryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

@@ -1,0 +1,71 @@
+plugins {
+    id 'fabric-loom' version '1.11.8'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modCompileOnly files('libs/litematica-1.19.4-0.14.7.jar', 'libs/malilib-1.19.4-0.15.4.jar')
+    if (project.hasProperty('oldLitematica')) {
+        modLocalRuntime files('libs/old/litematica-0.14.2.jar', 'libs/old/malilib-0.15.2.jar')
+    } else if (!project.hasProperty('noLitematica')) {
+        modLocalRuntime files('libs/litematica-1.19.4-0.14.7.jar', 'libs/malilib-1.19.4-0.15.4.jar')
+    }
+    if (!project.hasProperty('noSyncmatica')) {
+        modLocalRuntime files('libs/syncmatica.jar') // required by the add-on on the client
+    }
+    modCompileOnly files('libs/compat/masa/modmenu.jar')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+loom {
+    runs {
+        client {
+            programArgs '--width', '1600', '--height', '900'
+            // dev-only: a second client in its own folder with another name, e.g. -PrunDir=run-b -Puser=Bob
+            if (project.hasProperty('runDir')) {
+                runDir project.property('runDir')
+            }
+            if (project.hasProperty('user')) {
+                programArgs '--username', project.property('user')
+            }
+        }
+    }
+}
+
+// Dev-only: run the game together with other mods to check compatibility, e.g. `gradle runClient -Pcompat=masa`
+if (project.hasProperty('compat')) {
+    dependencies {
+        modLocalRuntime fileTree(dir: "libs/compat/${project.compat}", include: '*.jar')
+    }
+}
