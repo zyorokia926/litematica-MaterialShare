@@ -98,10 +98,10 @@ public final class Notifier {
 
     private static void toast(MinecraftClient client, String title, String text) {
         if (Configs.Generic.NOTIFY_CHAT.getBooleanValue() && client.player != null) {
-            client.player.sendMessage(Text.literal("§a[Litematica MaterialShare]§r §e" + title + "§r " + text), false);
+            client.player.sendMessage(dev.materialshare.McCompat.literal("§a[Litematica MaterialShare]§r §e" + title + "§r " + text), false);
         }
-        SystemToast.add(client.getToastManager(), SystemToast.Type.NARRATOR_TOGGLE, Text.literal(title),
-                Text.literal(text));
+        SystemToast.add(client.getToastManager(), SystemToast.Type.NARRATOR_TOGGLE, dev.materialshare.McCompat.literal(title),
+                dev.materialshare.McCompat.literal(text));
     }
 
     private static void play(MinecraftClient client, boolean big) {

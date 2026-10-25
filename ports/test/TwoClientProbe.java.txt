@@ -1,0 +1,257 @@
+package dev.materialshare.client;
+
+import dev.materialshare.common.Area;
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.GuiMaterialList;
+import fi.dy.masa.litematica.materials.MaterialListBase;
+import fi.dy.masa.litematica.materials.MaterialListPlacement;
+import fi.dy.masa.malilib.gui.GuiBase;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConnectScreen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.network.ServerAddress;
+import net.minecraft.client.network.ServerInfo;
+import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+
+/** TEMPORARY, never committed: two clients on one server (role Cara = operator, role Bob = second player). */
+public final class TmpProbe {
+    static final boolean CARA = "Cara".equals(System.getProperty("matlist.role"));
+    static final String ME = CARA ? "Cara" : "Bob";
+    static int tick, step, wait, since;
+    static boolean connecting;
+    static MaterialListBase list;
+    static String P = "";
+    static BlockPos origin;
+    static UUID other;
+
+    static void out(String s) {
+        System.out.println("TMPPROBE [" + ME + "] " + s);
+    }
+
+    static dev.materialshare.common.Entry stone() {
+        return ClientProjectCache.projects().stream().filter(x -> x.name().equals(P)).findFirst().map(p -> p.items().get("minecraft:stone")).orElse(null);
+    }
+
+    static UUID byName(String name) {
+        for (Map.Entry<UUID, String> e : ClientProjectCache.players().entrySet()) {
+            if (e.getValue().equals(name)) {
+                return e.getKey();
+            }
+        }
+        return null;
+    }
+
+    static void cmd(MinecraftClient c, String s) {
+        SEND.accept(c, s);
+    }
+
+    interface Sender {
+        void accept(MinecraftClient c, String s);
+    }
+
+    static final Sender SEND = (c, s) -> c.player.networkHandler.sendChatCommand(s);
+
+    static void next(int w) {
+        step++;
+        wait = w;
+        since = 0;
+    }
+
+    static String claims(dev.materialshare.common.Entry e) {
+        StringBuilder sb = new StringBuilder();
+        e.claims().forEach((id, n) -> sb.append(ClientProjectCache.nameOf(id)).append('=').append(n).append(" (handed in ").append(e.delivered().getOrDefault(id, 0)).append(") "));
+        return sb.toString();
+    }
+
+    public static void init() {
+        ClientTickEvents.END_CLIENT_TICK.register(c -> {
+            tick++;
+            if (c.world == null || c.player == null) {
+                if (!connecting && tick > 200 && c.currentScreen instanceof TitleScreen) {
+                    connecting = true;
+                    ConnectScreen.connect(c.currentScreen, c, ServerAddress.parse("127.0.0.1:25565"), new ServerInfo("t", "127.0.0.1:25565", false));
+                }
+                return;
+            }
+            if (c.player.age < 250 || wait-- > 0) {
+                return;
+            }
+            since++;
+            try {
+                if (origin == null) {
+                    origin = c.player.getBlockPos();
+                }
+                BlockPos chest = origin.add(3, 0, 0);
+                if (!CARA && !ClientProjectCache.storage(P).areas().isEmpty()) {
+                    var a = ClientProjectCache.storage(P).areas().get(0);
+                    chest = new BlockPos((a.minX() + a.maxX()) / 2, a.minY() + 1, (a.minZ() + a.maxZ()) / 2);
+                }
+                String at = chest.getX() + " " + chest.getY() + " " + chest.getZ();
+                var stone = stone();
+                switch (step) {
+                    case 0 -> {
+                        var pl = DataManager.getSchematicPlacementManager().getAllSchematicsPlacements().get(0);
+                        list = new MaterialListPlacement(pl, true);
+                        DataManager.setMaterialList(list);
+                        P = ProjectNames.forList(list);
+                        dev.materialshare.client.config.Configs.Generic.SHOW_INTRO.setBooleanValue(false);
+                        dev.materialshare.client.config.Configs.Generic.AUTO_IMPORT.setBooleanValue(false);
+                        GuiBase.openGui(new GuiMaterialList(list));
+                        next(CARA ? 200 : 100);
+                    }
+                    case 1 -> {
+                        GuiBase.openGui(null);
+                        ClientProjectCache.selectWhenArrives(P);
+                        if (CARA) {
+                            Map<String, Integer> all = new LinkedHashMap<>();
+                            all.put("minecraft:stone", 500);
+                            all.put("minecraft:oak_planks", 100);
+                            ClientNet.sendCreate(P, all);
+                        }
+                        next(40);
+                    }
+                    case 2 -> {
+                        if (stone == null) {
+                            if (since > 60) {
+                                out("FAIL project never arrived");
+                                c.scheduleStop();
+                            }
+                            wait = 20;
+                            return;
+                        }
+                        ClientProjectCache.select(P);
+                        out("sees project with " + ClientProjectCache.selected().get().items().size() + " items");
+                        ClientNet.sendClaim(P, "minecraft:stone", c.player.getUuid(), true);
+                        next(30);
+                    }
+                    case 3 -> {
+                        ClientNet.sendCollected(P, "minecraft:stone", c.player.getUuid(), CARA ? 10 : 20);
+                        next(60);
+                    }
+                    case 4 -> {
+                        // each must see both claims with the right numbers
+                        if (stone.claims().size() < 2 || stone.claims().values().stream().noneMatch(n -> n == 10) || stone.claims().values().stream().noneMatch(n -> n == 20)) {
+                            if (since > 40) {
+                                out("FAIL claims not seen: " + claims(stone));
+                                c.scheduleStop();
+                            }
+                            wait = 20;
+                            return;
+                        }
+                        out("OK sees both people: " + claims(stone));
+                        next(10);
+                    }
+                    case 5 -> {
+                        int[] sz = HelpScreen.sizeOf(HelpScreen.textureOf("list"));
+                        out("help picture " + (sz == null ? "MISSING" : sz[0] + "x" + sz[1]));
+                        cmd(c, "materialshare storage");
+                        if (CARA) {
+                            // a wheel-style change by Cara must reach Bob; the storage is set up for the hand-in
+                            cmd(c, "setblock " + at + " minecraft:chest");
+                            ClientNet.sendStorageAdd(P, Area.between("Box", c.world.getRegistryKey().getValue().toString(), chest.getX() - 3, chest.getY() - 1, chest.getZ() - 3, chest.getX() + 3, chest.getY() + 2, chest.getZ() + 3));
+                            other = byName("Bob");
+                            cmd(c, "give Bob minecraft:stone 64");
+                            cmd(c, "tp Bob " + chest.getX() + " " + chest.getY() + " " + (chest.getZ() + 2));
+                            ClientNet.sendCollected(P, "minecraft:stone", c.player.getUuid(), 15);
+                        }
+                        next(80);
+                    }
+                    case 6 -> {
+                        if (since == 1 && c.currentScreen != null) {
+                            out("command opened: " + c.currentScreen.getClass().getSimpleName());
+                            c.setScreen(null);
+                        }
+                        if (CARA) {
+                            // Bob hands 64 stone into the chest; Cara must see it live
+                            var bob = byName("Bob");
+                            int delivered = stone.delivered().getOrDefault(bob, 0);
+                            int stock = ClientProjectCache.storage(P).stock().getOrDefault("minecraft:stone", 0);
+                            if (delivered < 64 || stock < 64) {
+                                if (since > 120) {
+                                    out("FAIL hand-in not seen: " + claims(stone) + " stock=" + stock);
+                                    c.scheduleStop();
+                                }
+                                wait = 10;
+                                return;
+                            }
+                            out("OK sees Bob's hand-in live: " + claims(stone) + " stock=" + stock);
+                            next(100);
+                        } else {
+                            // Bob: Cara's change to 15 arrived?
+                            var cara = byName("Cara");
+                            Integer seen = cara == null ? null : stone.claims().get(cara);
+                            out("sees Cara's count = " + seen);
+                            if (c.player.getInventory().count(net.minecraft.item.Items.STONE) < 64 || ClientProjectCache.storage(P).areas().isEmpty()) {
+                                if (since > 60) {
+                                    out("FAIL no stone or no storage box yet");
+                                    c.scheduleStop();
+                                }
+                                wait = 20;
+                                return;
+                            }
+                            c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
+                            next(25);
+                        }
+                    }
+                    case 7 -> {
+                        if (CARA) {
+                            var bob = byName("Bob");
+                            out("Bob took it out again? " + claims(stone) + " stock=" + ClientProjectCache.storage(P).stock());
+                            c.scheduleStop();
+                        } else {
+                            if (c.currentScreen == null && since < 4) {
+                                out("block at chest: " + c.world.getBlockState(chest).getBlock() + ", retrying");
+                                c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
+                                wait = 25;
+                                return;
+                            }
+                            var h = c.player.currentScreenHandler;
+                            out("screen=" + (c.currentScreen == null ? "null" : c.currentScreen.getClass().getSimpleName()) + " pos=" + c.player.getBlockPos() + " chest=" + chest + " stone=" + c.player.getInventory().count(net.minecraft.item.Items.STONE));
+                            for (int i = h.slots.size() - 36; i < h.slots.size(); i++) {
+                                if (h.getSlot(i).getStack().getItem() == net.minecraft.item.Items.STONE) {
+                                    c.interactionManager.clickSlot(h.syncId, i, 0, SlotActionType.QUICK_MOVE, c.player);
+                                    break;
+                                }
+                            }
+                            next(30);
+                        }
+                    }
+                    case 8 -> {
+                        out("own view after hand-in (chest open): " + claims(stone) + " stock=" + ClientProjectCache.storage(P).stock());
+                        c.player.closeHandledScreen();
+                        next(20);
+                    }
+                    case 9 -> {
+                        // take half out again: numbers must go down for both
+                        c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
+                        next(25);
+                    }
+                    case 10 -> {
+                        var h = c.player.currentScreenHandler;
+                        c.interactionManager.clickSlot(h.syncId, 0, 0, SlotActionType.QUICK_MOVE, c.player);
+                        next(30);
+                    }
+                    case 11 -> {
+                        out("after taking out: " + claims(stone) + " stock=" + ClientProjectCache.storage(P).stock());
+                        c.player.closeHandledScreen();
+                        next(60);
+                    }
+                    default -> c.scheduleStop();
+                }
+            } catch (Exception e) {
+                out("EXC " + e);
+                e.printStackTrace(System.out);
+                c.scheduleStop();
+            }
+        });
+    }
+}

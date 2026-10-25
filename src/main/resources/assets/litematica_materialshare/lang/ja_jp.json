@@ -623,7 +623,7 @@
   "litematica_materialshare.help.commands.body": "/materialshare help … コマンドの一覧\n/materialshare progress … 選んでいる設計図の進み具合\n/materialshare mine … 自分の未完了の担当\n/materialshare surplus … 出されている余り\n/materialshare storage … 保管場所の画面を開く\n/materialshare storage clear … 角の印を消す\n/materialshare projects … 共有している設計図と進み具合\n/materialshare select <名前> … 設計図を選ぶ\nコマンドは手早く見るためのものです。ほかの操作は、マテリアルリストの画面で行います。",
   "litematica_materialshare.help.server.title": "サーバーの管理者へ",
   "litematica_materialshare.help.server.short": "導入、設定ファイル、データの保存先",
-  "litematica_materialshare.help.server.body": "サーバーには、このMODと Fabric API を入れます(Litematica は不要です)。全員のクライアントに同じ版の jar が必要で、版が合わないと参加時に理由が表示されます。\n初回の起動で config/litematica_materialshare_server.json が作られます。「maxProjects」で、同時に共有できる設計図の数(1〜64)を決められます。\nデータはサーバーのワールドに保存されます。MODを入れた全員が全プロジェクトを見られ、誰でも編集できます(操作は履歴に残ります)。保管場所のチェストの中身は、サーバーが読み込んでいる場所だけ数えられます。",
+  "litematica_materialshare.help.server.body": "サーバーには、このMODと Fabric API、malilib、Syncmatica を入れます(Litematica は不要です)。全員のクライアントに同じ版の jar が必要で、版が合わないと参加時に理由が表示されます。\n初回の起動で config/litematica_materialshare_server.json が作られます。「maxProjects」で、同時に共有できる設計図の数(1〜64)を決められます。\nデータはサーバーのワールドに保存されます。MODを入れた全員が全プロジェクトを見られ、誰でも編集できます(操作は履歴に残ります)。保管場所のチェストの中身は、サーバーが読み込んでいる場所だけ数えられます。",
   "litematica_materialshare.storage.noproject": "先にマテリアルリストで設計図を選んでから、保管場所を登録してください。",
   "litematica_materialshare.storage.link": "[ここをクリックして、保管場所に登録する]",
   "litematica_materialshare.storage.link.tip": "保管場所の登録画面を開きます",

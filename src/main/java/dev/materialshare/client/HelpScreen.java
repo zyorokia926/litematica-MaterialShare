@@ -13,7 +13,6 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 
 /**
@@ -91,10 +90,11 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
         }
         int[] size = null;
         try {
-            Resource resource = MinecraftClient.getInstance().getResourceManager().getResource(id).orElse(null);
-            if (resource != null) {
-                try (InputStream in = resource.getInputStream(); NativeImage image = NativeImage.read(in)) {
-                    size = new int[] {image.getWidth(), image.getHeight()};
+            try (InputStream in = dev.materialshare.McClientCompat.openResource(id)) {
+                if (in != null) {
+                    try (NativeImage image = NativeImage.read(in)) {
+                        size = new int[] {image.getWidth(), image.getHeight()};
+                    }
                 }
             }
         } catch (java.io.IOException | RuntimeException e) {

@@ -19,6 +19,20 @@ English. **Whenever a feature is added, changed or removed, update the how-to in
 
 Also keep `README.md`, `dist/modrinth/description_*.md` and `dist/modrinth/changelog.md` in step.
 
+## Minecraft versions
+
+The main build is for 1.19.4. Other versions (1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2, 1.19.3) are built from the same source with `python3 ports/build.py <version>`
+(downloads the matching Litematica, malilib, Syncmatica and Mod Menu from Modrinth, builds, and puts the jar into `dist/`).
+Everything that differs in the game's API sits in `src/compat/<version>/java/dev/materialshare/McCompat.java` (server side
+and version ranges) and `McClientCompat.java` (client side). Do not use version-specific game classes (or `Text.literal`, the Fabric client command API, resources) anywhere else; add a
+method to both compat files instead. After a change, build and try every version (`ports/build.py`, then a server with two clients).
+**For every new Minecraft version the owner asks for, test with two or more clients on one server** (at least: both assign
+the same item, change counts, one hands items into a storage chest while the other watches the numbers). A single client
+is not enough. `ports/test/` has the probe (`TwoClientProbe.java.txt`, copied in as `TmpProbe.java` and never committed to src) and
+the script (`two-clients.sh <version>`, needs the work folder that `ports/build.py` made). Set `spawn-protection=0` on the test
+server and teleport the second player next to the chest, or he cannot open it. All builds (1.18 to 1.19.4) passed it. Before releasing, also check that every prerequisite mod (Litematica, malilib, Syncmatica,
+Fabric API) exists for the version and that the Litematica build asks for the malilib build you chose (1.18 needs malilib 0.10.x).
+
 ## Other rules
 
 - Bump `ProtocolCheck.PROTOCOL_VERSION` whenever packets change (and describe the change in its comment).

@@ -13,7 +13,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
 /** A small list in a corner of the game screen: what you still have to collect in the selected project. */
@@ -129,8 +128,8 @@ public final class HudOverlay {
         }
         for (Line line : l.lines) {
             Identifier id = Identifier.tryParse(line.itemId);
-            if (id != null && Registries.ITEM.containsId(id)) {
-                client.getItemRenderer().renderGuiItemIcon(matrices, new ItemStack(Registries.ITEM.get(id)), x + PAD, ly);
+            if (id != null && dev.materialshare.McCompat.hasItem(id)) {
+                dev.materialshare.McClientCompat.renderItemIcon(client, matrices, new ItemStack(dev.materialshare.McCompat.item(id)), x + PAD, ly);
             }
             font.drawWithShadow(matrices, (line.priority ? "§6★§r " : "") + line.text, x + PAD + ICON + 2, ly + 4, 0xFFFFFFFF);
             ly += ICON;

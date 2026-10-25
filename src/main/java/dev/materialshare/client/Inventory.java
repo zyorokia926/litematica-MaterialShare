@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 
 /** What the player carries: hotbar, inventory, armor and off hand, counted per item id. */
 final class Inventory {
@@ -17,13 +16,13 @@ final class Inventory {
         for (int i = 0; i < inventory.size(); i++) {
             ItemStack stack = inventory.getStack(i);
             if (!stack.isEmpty()) {
-                counts.merge(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
+                counts.merge(dev.materialshare.McCompat.itemId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
             }
         }
         return counts;
     }
 
     static String idOf(ItemStack stack) {
-        return Registries.ITEM.getId(stack.getItem()).toString();
+        return dev.materialshare.McCompat.itemId(stack.getItem()).toString();
     }
 }

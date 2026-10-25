@@ -41,10 +41,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+// Version-specific game API (McCompat): src/compat/<version>/java; -PmcCompat=1.19.2 picks another version than 1.19.4
+sourceSets.main.java.srcDir "src/compat/${project.findProperty('mcCompat') ?: '1.19.4'}/java"
+
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') {
-        expand 'version': project.version
+        expand 'version': project.version, 'minecraft_dependency': project.findProperty('minecraft_dependency') ?: project.minecraft_version, 'fabric_api_min': project.findProperty('fabric_api_min') ?: '0.76.0', 'fabric_api_id': project.findProperty('fabric_api_id') ?: 'fabric-api'
     }
 }
 

@@ -33,7 +33,7 @@ class SplitScreen extends SearchListScreen<UUID> {
     }
 
     private int stackSize() {
-        return net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.tryParse(itemId)).getMaxCount();
+        return dev.materialshare.McCompat.item(net.minecraft.util.Identifier.tryParse(itemId)).getMaxCount();
     }
 
     @Override

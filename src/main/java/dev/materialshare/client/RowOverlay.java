@@ -26,7 +26,6 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -78,7 +77,7 @@ public final class RowOverlay {
     }
 
     public static String itemId(MaterialListEntry entry) {
-        return Registries.ITEM.getId(entry.getStack().getItem()).toString();
+        return dev.materialshare.McCompat.itemId(entry.getStack().getItem()).toString();
     }
 
     // ---- header -----------------------------------------------------------------------------
@@ -154,7 +153,7 @@ public final class RowOverlay {
         for (Cell cell : layout(row, entry, x0)) {
             if (cell.contains(mx, my) && !cell.tooltip.isEmpty()) {
                 List<Text> lines = new ArrayList<>();
-                cell.tooltip.forEach(line -> lines.add(Text.literal(line)));
+                cell.tooltip.forEach(line -> lines.add(dev.materialshare.McCompat.literal(line)));
                 screen.renderOrderedTooltip(matrices, UiText.tipLines(lines), mx, my);
                 return true;
             }
@@ -521,12 +520,12 @@ public final class RowOverlay {
     private static void drawVanillaButton(WidgetBase row, MatrixStack matrices, Cell cell, boolean hover) {
         int v = 46 + (hover ? 2 : 1) * 20;
         int half = cell.w / 2;
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        dev.materialshare.McClientCompat.useShaderPositionTex();
         RenderSystem.setShaderTexture(0, ClickableWidget.WIDGETS_TEXTURE);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
-        DrawableHelper.drawTexture(matrices, cell.x, cell.y, 0, v, half, cell.h);
-        DrawableHelper.drawTexture(matrices, cell.x + half, cell.y, 200 - (cell.w - half), v, cell.w - half, cell.h);
+        DrawableHelper.drawTexture(matrices, cell.x, cell.y, half, cell.h, 0.0F, (float) v, half, cell.h, 256, 256);
+        DrawableHelper.drawTexture(matrices, cell.x + half, cell.y, cell.w - half, cell.h, (float) (200 - (cell.w - half)), (float) v, cell.w - half, cell.h, 256, 256);
         RenderSystem.disableBlend();
         int color = hover ? 0xFFFFFFA0 : 0xFFE0E0E0;
         row.drawCenteredStringWithShadow(cell.x + cell.w / 2, cell.y + (cell.h - 8) / 2, color, cell.text, matrices);
@@ -560,7 +559,7 @@ public final class RowOverlay {
 
     /** The 8x8 face from the skin, plus the hat layer on top. */
     static void drawFace(MatrixStack matrices, UUID player, int x, int y) {
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        dev.materialshare.McClientCompat.useShaderPositionTex();
         RenderSystem.setShaderTexture(0, skinOf(player));
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();

@@ -167,9 +167,9 @@ public final class UiText {
     /** The display name of an item id, or the id itself if it is not a known item. */
     static String itemName(String id) {
         net.minecraft.util.Identifier identifier = net.minecraft.util.Identifier.tryParse(id);
-        if (identifier == null || !net.minecraft.registry.Registries.ITEM.containsId(identifier)) {
+        if (identifier == null || !dev.materialshare.McCompat.hasItem(identifier)) {
             return id;
         }
-        return net.minecraft.registry.Registries.ITEM.get(identifier).getName().getString();
+        return dev.materialshare.McCompat.item(identifier).getName().getString();
     }
 }

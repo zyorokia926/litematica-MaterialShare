@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.RecipeType;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
 /** Gives {@link Breakdown} the crafting recipes of the game the player is in. */
@@ -22,7 +21,7 @@ final class RecipeAdapter {
 
     static int stackSize(String itemId) {
         Identifier id = Identifier.tryParse(itemId);
-        return id == null || !Registries.ITEM.containsId(id) ? 64 : Registries.ITEM.get(id).getMaxCount();
+        return id == null || !dev.materialshare.McCompat.hasItem(id) ? 64 : dev.materialshare.McCompat.item(id).getMaxCount();
     }
 
     /**
@@ -35,7 +34,7 @@ final class RecipeAdapter {
         if (client.world != null) {
             var manager = client.world.getRecipeManager();
             for (CraftingRecipe recipe : manager.listAllOfType(RecipeType.CRAFTING)) {
-                ItemStack out = recipe.getOutput(client.world.getRegistryManager());
+                ItemStack out = dev.materialshare.McClientCompat.recipeOutput(recipe, client);
                 if (out.isEmpty()) {
                     continue;
                 }
@@ -47,7 +46,7 @@ final class RecipeAdapter {
                     }
                     String chosen = null;
                     for (ItemStack stack : ingredient.getMatchingStacks()) {
-                        String id = Registries.ITEM.getId(stack.getItem()).toString();
+                        String id = dev.materialshare.McCompat.itemId(stack.getItem()).toString();
                         if (chosen == null) {
                             chosen = id;
                         }
@@ -63,7 +62,7 @@ final class RecipeAdapter {
                     ingredients.merge(chosen, 1, Integer::sum);
                 }
                 if (usable && !ingredients.isEmpty()) {
-                    byOutput.computeIfAbsent(Registries.ITEM.getId(out.getItem()).toString(), k -> new ArrayList<>())
+                    byOutput.computeIfAbsent(dev.materialshare.McCompat.itemId(out.getItem()).toString(), k -> new ArrayList<>())
                             .add(new Breakdown.Recipe(out.getCount(), ingredients));
                 }
             }

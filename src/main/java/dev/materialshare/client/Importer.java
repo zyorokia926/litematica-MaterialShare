@@ -191,22 +191,22 @@ public final class Importer {
         }
         var stack = client.player.getMainHandStack();
         if (stack.isEmpty()) {
-            client.player.sendMessage(net.minecraft.text.Text.literal(Lang.t("held.empty")), true);
+            client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("held.empty")), true);
             return;
         }
         if (project.isEmpty()) {
-            client.player.sendMessage(net.minecraft.text.Text.literal(Lang.t("import.pick")), true);
+            client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("import.pick")), true);
             return;
         }
         String id = Inventory.idOf(stack);
         Entry e = project.get().items().get(id);
         String name = stack.getName().getString();
         if (e == null) {
-            client.player.sendMessage(net.minecraft.text.Text.literal(Lang.t("held.notneeded", name)), true);
+            client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("held.notneeded", name)), true);
             return;
         }
         if (e.claims().containsKey(self)) {
-            client.player.sendMessage(net.minecraft.text.Text.literal(Lang.t("held.already", name)), true);
+            client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("held.already", name)), true);
             return;
         }
         int have = Inventory.counts(client.player).getOrDefault(id, 0);
@@ -214,7 +214,7 @@ public final class Importer {
         if (have > 0) {
             ClientNet.sendImport(project.get().name(), java.util.Map.of(id, Math.min(have, e.required())));
         }
-        client.player.sendMessage(net.minecraft.text.Text.literal(Lang.t("held.claimed", name)), true);
+        client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("held.claimed", name)), true);
     }
 
     /** Marks everything you collected as handed in (so teammates can see it is in the storage). */

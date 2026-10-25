@@ -66,15 +66,15 @@ public final class StorageMarks {
     /** Both corners are marked: a chat line that opens the registration screen when clicked. */
     private static void announceRegister(MinecraftClient client) {
         if (ClientProjectCache.selected().isEmpty()) {
-            client.player.sendMessage(net.minecraft.text.Text.literal("§e[Litematica MaterialShare]§r " + Lang.t("storage.noproject")), false);
+            client.player.sendMessage(dev.materialshare.McCompat.literal("§e[Litematica MaterialShare]§r " + Lang.t("storage.noproject")), false);
             return;
         }
-        net.minecraft.text.MutableText link = net.minecraft.text.Text.literal("§b§n" + Lang.t("storage.link"))
+        net.minecraft.text.MutableText link = dev.materialshare.McCompat.literal("§b§n" + Lang.t("storage.link"))
                 .setStyle(net.minecraft.text.Style.EMPTY.withClickEvent(new net.minecraft.text.ClickEvent(
                         net.minecraft.text.ClickEvent.Action.RUN_COMMAND, "/materialshare storage"))
                         .withHoverEvent(new net.minecraft.text.HoverEvent(net.minecraft.text.HoverEvent.Action.SHOW_TEXT,
-                                net.minecraft.text.Text.literal(Lang.t("storage.link.tip")))));
-        client.player.sendMessage(net.minecraft.text.Text.literal("§a[Litematica MaterialShare]§r " + Lang.t("storage.marked.both") + " ").append(link), false);
+                                dev.materialshare.McCompat.literal(Lang.t("storage.link.tip")))));
+        client.player.sendMessage(dev.materialshare.McCompat.literal("§a[Litematica MaterialShare]§r " + Lang.t("storage.marked.both") + " ").append(link), false);
     }
 
     static boolean ready() {

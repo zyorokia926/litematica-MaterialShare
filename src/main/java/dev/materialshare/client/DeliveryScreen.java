@@ -68,7 +68,7 @@ class DeliveryScreen extends SearchListScreen<DeliveryScreen.Row> {
 
     private void enter(Row r) {
         UUID self = RowOverlay.selfId();
-        int stack = net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.tryParse(r.itemId())).getMaxCount();
+        int stack = dev.materialshare.McCompat.item(net.minecraft.util.Identifier.tryParse(r.itemId())).getMaxCount();
         openGui(new GuiTextInput(12, Lang.t("deliver.enter.title", UiText.escapeFormat(UiText.itemName(r.itemId()))),
                 String.valueOf(r.entry().delivered().getOrDefault(self, 0)), this, (IStringConsumerFeedback) text -> {
                     var count = Counts.parse(text, stack);

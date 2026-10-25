@@ -2,7 +2,7 @@
 
 **English** | [日本語はこの下にあります (Japanese below)](#日本語)
 
-*An unofficial add-on for Litematica, not affiliated with its authors. Fabric, Minecraft 1.19.4.*
+*An unofficial add-on for Litematica, not affiliated with its authors. Fabric, Minecraft 1.18 to 1.19.4.*
 
 ---
 
@@ -45,8 +45,23 @@ When you build together, somebody always asks "who takes the redstone?" and "how
 
 | Where | What you need |
 |---|---|
-| Server | Fabric Loader 0.14.21+, Fabric API 0.76.0+, **this mod** (Litematica is not needed) |
-| Client | The same, plus **Litematica** (0.14.2 or newer, older than 0.15.0), **malilib** (0.15.2 or newer, older than 0.16.0) and **Syncmatica** |
+| Server | Fabric Loader 0.14.21+, Fabric API 0.76.0+, **malilib**, **Syncmatica**, **this mod** (Litematica is not needed) |
+| Client | The same, plus **Litematica** (versions: see the table below) |
+
+**Supported versions** (one jar per Minecraft version; use the jar that matches your game):
+
+| Minecraft | Litematica | malilib | Jar |
+|---|---|---|---|
+| 1.18 | 0.9.x (tested: 0.9.1) | 0.10.x (tested: 0.10.0-dev.26) | `...-0.10.0+1.18.jar` |
+| 1.18.1 | 0.10.x (tested: 0.10.4) | 0.11.x (tested: 0.11.8) | `...-0.10.0+1.18.1.jar` |
+| 1.18.2 | 0.11.x (tested: 0.11.7) | 0.12.x (tested: 0.12.1) | `...-0.10.0+1.18.2.jar` |
+| 1.19 | 0.12.x (tested: 0.12.2) | 0.13.x (tested: 0.13.0) | `...-0.10.0+1.19.jar` |
+| 1.19.1 | 0.12.x (tested: 0.12.3) | 0.13.x (tested: 0.13.0) | `...-0.10.0+1.19.1.jar` |
+| 1.19.2 | 0.12.x (tested: 0.12.7) | 0.13.x (tested: 0.13.0) | `...-0.10.0+1.19.2.jar` |
+| 1.19.3 | 0.13.x (tested: 0.13.2) | 0.14.x (tested: 0.14.0) | `...-0.10.0+1.19.3.jar` |
+| 1.19.4 | 0.14.2 or newer, older than 0.15.0 (tested: 0.14.7) | 0.15.2 or newer, older than 0.16.0 (tested: 0.15.4) | `...-0.10.0.jar` |
+
+Syncmatica: any version. Fabric API: 0.76.0 or newer (1.19 and 1.19.1: 0.58.0 or newer; 1.18 and 1.18.1: 0.44.0 or newer).
 
 - Put the **same version** of the jar on the server and on every client. If the versions differ, the reason is shown when joining.
 - A schematic must be shared with Syncmatica to be tracked. Open its material list and tracking starts by itself.
@@ -107,8 +122,23 @@ Litematica and malilib screens are only extended with mixin injections, and noth
 
 | 場所 | 必要なもの |
 |---|---|
-| サーバー | Fabric Loader 0.14.21 以上、Fabric API 0.76.0 以上、**本MOD**(Litematica は不要) |
-| クライアント | 上に加えて、**Litematica**(0.14.2 以上 0.15.0 未満)、**malilib**(0.15.2 以上 0.16.0 未満)、**Syncmatica** |
+| サーバー | Fabric Loader 0.14.21 以上、Fabric API 0.76.0 以上、**malilib**、**Syncmatica**、**本MOD**(Litematica は不要) |
+| クライアント | 上に加えて、**Litematica**(版は下の表を見てください) |
+
+**対応する版**(Minecraft の版ごとに jar が別です。遊んでいる版に合う jar を使ってください):
+
+| Minecraft | Litematica | malilib | jar |
+|---|---|---|---|
+| 1.18 | 0.9.x(確認: 0.9.1) | 0.10.x(確認: 0.10.0-dev.26) | `...-0.10.0+1.18.jar` |
+| 1.18.1 | 0.10.x(確認: 0.10.4) | 0.11.x(確認: 0.11.8) | `...-0.10.0+1.18.1.jar` |
+| 1.18.2 | 0.11.x(確認: 0.11.7) | 0.12.x(確認: 0.12.1) | `...-0.10.0+1.18.2.jar` |
+| 1.19 | 0.12.x(確認: 0.12.2) | 0.13.x(確認: 0.13.0) | `...-0.10.0+1.19.jar` |
+| 1.19.1 | 0.12.x(確認: 0.12.3) | 0.13.x(確認: 0.13.0) | `...-0.10.0+1.19.1.jar` |
+| 1.19.2 | 0.12.x(確認: 0.12.7) | 0.13.x(確認: 0.13.0) | `...-0.10.0+1.19.2.jar` |
+| 1.19.3 | 0.13.x(確認: 0.13.2) | 0.14.x(確認: 0.14.0) | `...-0.10.0+1.19.3.jar` |
+| 1.19.4 | 0.14.2 以上 0.15.0 未満(確認: 0.14.7) | 0.15.2 以上 0.16.0 未満(確認: 0.15.4) | `...-0.10.0.jar` |
+
+Syncmatica はどの版でも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 は 0.58.0 以上、1.18 と 1.18.1 は 0.44.0 以上)。
 
 - サーバーと全員のクライアントに、**同じ版**の jar を入れてください。版が違うと、参加するときに理由が表示されます。
 - 担当管理を始めるには、設計図が Syncmatica で共有されている必要があります。マテリアルリストを開くと、自動で始まります。

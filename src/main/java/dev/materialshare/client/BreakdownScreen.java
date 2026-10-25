@@ -20,7 +20,6 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -530,9 +529,9 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
             font.drawWithShadow(matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
         } else {
             Identifier id = Identifier.tryParse(p.itemId);
-            if (id != null && Registries.ITEM.containsId(id)) {
+            if (id != null && dev.materialshare.McCompat.hasItem(id)) {
                 // the icon is drawn smaller than the box is high, so it stays inside the frame
-                client().getItemRenderer().renderGuiItemIcon(matrices, new ItemStack(Registries.ITEM.get(id)), textX, y + 1);
+                dev.materialshare.McClientCompat.renderItemIcon(client(), matrices, new ItemStack(dev.materialshare.McCompat.item(id)), textX, y + 1);
             }
             font.drawWithShadow(matrices, UiText.fit(p.name, p.w - p.countW - ICON - 18), textX + ICON + 2, y + 5, 0xFFFFFFFF);
             font.drawWithShadow(matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
@@ -549,29 +548,29 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
     private void tooltip(MatrixStack matrices, Placed p, int mx, int my) {
         List<Text> lines = new ArrayList<>();
         if (p.kind == Kind.ROOT) {
-            lines.add(Text.literal("§6" + p.name));
-            lines.add(Text.literal(Lang.t("breakdown.node.items", p.kids.size())));
+            lines.add(dev.materialshare.McCompat.literal("§6" + p.name));
+            lines.add(dev.materialshare.McCompat.literal(Lang.t("breakdown.node.items", p.kids.size())));
         } else {
             BreakdownTree.Node n = p.source;
-            lines.add(Text.literal("§f" + UiText.itemName(p.itemId)));
-            lines.add(Text.literal(Lang.t("breakdown.node.need", n.amount())));
+            lines.add(dev.materialshare.McCompat.literal("§f" + UiText.itemName(p.itemId)));
+            lines.add(dev.materialshare.McCompat.literal(Lang.t("breakdown.node.need", n.amount())));
             int stack = RecipeAdapter.stackSize(p.itemId);
             String stacks = Stacks.format(n.amount(), stack, Lang.TRANSLATOR);
             if (!stacks.isEmpty()) {
-                lines.add(Text.literal("§7" + stacks));
+                lines.add(dev.materialshare.McCompat.literal("§7" + stacks));
             }
             if (n.raw()) {
-                lines.add(Text.literal("§a" + Lang.t("breakdown.node.raw")));
+                lines.add(dev.materialshare.McCompat.literal("§a" + Lang.t("breakdown.node.raw")));
             } else {
-                lines.add(Text.literal("§b" + Lang.t("breakdown.node.crafts", n.crafts())));
+                lines.add(dev.materialshare.McCompat.literal("§b" + Lang.t("breakdown.node.crafts", n.crafts())));
                 if (n.leftover() > 0) {
-                    lines.add(Text.literal("§7" + Lang.t("breakdown.node.leftover", n.leftover())));
+                    lines.add(dev.materialshare.McCompat.literal("§7" + Lang.t("breakdown.node.leftover", n.leftover())));
                 }
             }
         }
         if (p.kind != Kind.ROOT) {
             for (dev.materialshare.common.Packets.Offer offer : ClientProjectCache.surplusOf(this.project, p.itemId)) {
-                lines.add(Text.literal("§d" + Lang.t("row.surplus", ClientProjectCache.nameOf(offer.player()), offer.count())));
+                lines.add(dev.materialshare.McCompat.literal("§d" + Lang.t("row.surplus", ClientProjectCache.nameOf(offer.player()), offer.count())));
             }
         }
         renderOrderedTooltip(matrices, UiText.tipLines(lines), mx, my);

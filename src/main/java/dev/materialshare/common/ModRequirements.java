@@ -16,8 +16,8 @@ public final class ModRequirements {
     }
 
     public static final List<Requirement> CLIENT = List.of(
-            new Requirement("litematica", "Litematica", "0.14.2", "0.15.0"),
-            new Requirement("malilib", "malilib", "0.15.2", "0.16.0"),
+            new Requirement("litematica", "Litematica", dev.materialshare.McCompat.LITEMATICA_RANGE[0], dev.materialshare.McCompat.LITEMATICA_RANGE[1]),
+            new Requirement("malilib", "malilib", dev.materialshare.McCompat.MALILIB_RANGE[0], dev.materialshare.McCompat.MALILIB_RANGE[1]),
             new Requirement("syncmatica", "Syncmatica", null, null));
 
     private ModRequirements() {
@@ -33,11 +33,11 @@ public final class ModRequirements {
             String version = installedVersion.apply(r.modId);
             if (version == null) {
                 problems.add(r.displayName + " が見つかりません / " + r.displayName + " is missing"
-                        + " (必要 / required: " + range + ", Minecraft 1.19.4)");
+                        + " (必要 / required: " + range + ", Minecraft " + dev.materialshare.McCompat.MINECRAFT + ")");
             } else if (!anyVersion && hasNumbers(version)
                     && (compare(version, r.min) < 0 || compare(version, r.maxExclusive) >= 0)) {
                 problems.add(r.displayName + " " + version + " には対応していません / " + r.displayName + " " + version
-                        + " is not supported (必要 / required: " + range + ", Minecraft 1.19.4)");
+                        + " is not supported (必要 / required: " + range + ", Minecraft " + dev.materialshare.McCompat.MINECRAFT + ")");
             }
         }
         return problems;

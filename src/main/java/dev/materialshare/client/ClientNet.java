@@ -29,8 +29,7 @@ public final class ClientNet implements ClientModInitializer {
         ticks.register(Importer::tick);
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register(HudOverlay::render);
         net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.LAST.register(StorageRender::render);
-        net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register(
-                (dispatcher, registryAccess) -> ClientCommands.register(dispatcher));
+        dev.materialshare.McClientCompat.registerCommands();
     }
 
     public static void register() {

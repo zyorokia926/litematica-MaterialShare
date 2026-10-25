@@ -42,7 +42,7 @@ class ItemDetailScreen extends GridScreen {
         if (Configs.Generic.SHOW_DELIVERY.getBooleanValue()) {
             sb.append("  ").append(Lang.t("detail.delivered", e.deliveredTotal()));
         }
-        int stack = net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.tryParse(itemId)).getMaxCount();
+        int stack = dev.materialshare.McCompat.item(net.minecraft.util.Identifier.tryParse(itemId)).getMaxCount();
         String stacks = Stacks.format(e.required(), stack, Lang.TRANSLATOR);
         if (!stacks.isEmpty()) {
             sb.append("\n§7").append(Lang.t("row.stacks", stacks));

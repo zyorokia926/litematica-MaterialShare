@@ -75,7 +75,7 @@ public final class StorageRender {
             } else {
                 RenderSystem.enableDepthTest();
             }
-            RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+            dev.materialshare.McClientCompat.useShaderLines();
             RenderSystem.lineWidth(pass == 0 ? 2f : 3f);
             BufferBuilder buf = Tessellator.getInstance().getBuffer();
             buf.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
@@ -100,7 +100,7 @@ public final class StorageRender {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        dev.materialshare.McClientCompat.useShaderPositionColor();
         BufferBuilder fill = Tessellator.getInstance().getBuffer();
         fill.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         int k = 0;
@@ -125,20 +125,20 @@ public final class StorageRender {
         }
     }
 
-    private static void quad(org.joml.Matrix4f mat, BufferBuilder b, float[] v, float r, float g, float bl, float a) {
-        for (int i = 0; i < 12; i += 3) {
-            b.vertex(mat, v[i], v[i + 1], v[i + 2]).color(r, g, bl, a).next();
-        }
-    }
-
     private static void fillBox(MatrixStack m, BufferBuilder b, float x1, float y1, float z1, float x2, float y2, float z2,
             float r, float g, float bl, float a) {
-        org.joml.Matrix4f mat = m.peek().getPositionMatrix();
-        quad(mat, b, new float[] {x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2}, r, g, bl, a);
-        quad(mat, b, new float[] {x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1}, r, g, bl, a);
-        quad(mat, b, new float[] {x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1}, r, g, bl, a);
-        quad(mat, b, new float[] {x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2}, r, g, bl, a);
-        quad(mat, b, new float[] {x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1}, r, g, bl, a);
-        quad(mat, b, new float[] {x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2}, r, g, bl, a);
+        var mat = m.peek().getPositionMatrix();
+        float[][] faces = {
+            {x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2},
+            {x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1},
+            {x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1},
+            {x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2},
+            {x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1},
+            {x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2}};
+        for (float[] v : faces) {
+            for (int i = 0; i < 12; i += 3) {
+                b.vertex(mat, v[i], v[i + 1], v[i + 2]).color(r, g, bl, a).next();
+            }
+        }
     }
 }

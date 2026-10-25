@@ -8,8 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandSource;
 import net.minecraft.text.Text;
@@ -25,53 +28,58 @@ public final class ClientCommands {
     private ClientCommands() {
     }
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        dispatcher.register(ClientCommandManager.literal("materialshare")
+    /**
+     * The command tree. The command API of Fabric moved between versions (a different package), so the way to make a
+     * literal or an argument comes from the caller (see McClientCompat.registerCommands).
+     */
+    public static <S> LiteralArgumentBuilder<S> tree(Function<String, LiteralArgumentBuilder<S>> literal,
+            BiFunction<String, ArgumentType<String>, RequiredArgumentBuilder<S, String>> argument) {
+        return literal.apply("materialshare")
                 .executes(c -> {
                     help();
                     return 1;
                 })
-                .then(ClientCommandManager.literal("help").executes(c -> {
+                .then(literal.apply("help").executes(c -> {
                     help();
                     return 1;
                 }))
-                .then(ClientCommandManager.literal("progress").executes(c -> {
+                .then(literal.apply("progress").executes(c -> {
                     progress();
                     return 1;
                 }))
-                .then(ClientCommandManager.literal("mine").executes(c -> {
+                .then(literal.apply("mine").executes(c -> {
                     mine();
                     return 1;
                 }))
-                .then(ClientCommandManager.literal("storage").executes(c -> {
+                .then(literal.apply("storage").executes(c -> {
                     openStorage();
                     return 1;
-                }).then(ClientCommandManager.literal("clear").executes(c -> {
+                }).then(literal.apply("clear").executes(c -> {
                     StorageMarks.clearWithMessage();
                     return 1;
                 })))
-                .then(ClientCommandManager.literal("surplus").executes(c -> {
+                .then(literal.apply("surplus").executes(c -> {
                     surplus();
                     return 1;
                 }))
-                .then(ClientCommandManager.literal("projects").executes(c -> {
+                .then(literal.apply("projects").executes(c -> {
                     projects();
                     return 1;
                 }))
-                .then(ClientCommandManager.literal("select")
-                        .then(ClientCommandManager.argument("name", StringArgumentType.greedyString())
+                .then(literal.apply("select")
+                        .then(argument.apply("name", StringArgumentType.greedyString())
                                 .suggests((ctx, builder) -> CommandSource.suggestMatching(
                                         ClientProjectCache.projects().stream().map(Project::name).toList(), builder))
                                 .executes(c -> {
                                     select(StringArgumentType.getString(c, "name"));
                                     return 1;
-                                }))));
+                                })));
     }
 
     private static void say(String text) {
         var player = MinecraftClient.getInstance().player;
         if (player != null) {
-            player.sendMessage(Text.literal(text), false);
+            player.sendMessage(dev.materialshare.McCompat.literal(text), false);
         }
     }
 

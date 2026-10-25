@@ -28,7 +28,7 @@ public final class ServerNet {
 
     /** Tells the player (above the hotbar) why nothing happened. */
     private static void tell(ServerPlayerEntity player, String key) {
-        player.sendMessage(net.minecraft.text.Text.translatable(key), true);
+        player.sendMessage(dev.materialshare.McCompat.translatable(key), true);
     }
 
     public static void register() {
@@ -381,7 +381,7 @@ public final class ServerNet {
                     // an old client answers with an empty packet, a current one with its protocol version
                     int client = buf.readableBytes() > 0 ? buf.readVarInt() : ProtocolCheck.UNKNOWN;
                     ProtocolCheck.problem(ProtocolCheck.PROTOCOL_VERSION, client)
-                            .ifPresent(message -> handler.disconnect(Text.literal(message)));
+                            .ifPresent(message -> handler.disconnect(dev.materialshare.McCompat.literal(message)));
                 });
     }
 

@@ -1,5 +1,6 @@
 ## 0.10.0
 
+- Now also for Minecraft 1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2 and 1.19.3 (one jar per version, for example `-0.10.0+1.19.2.jar`; the 1.19.4 jar is `-0.10.0.jar`).
 - Sub-regions can be shared part by part from the schematic screen (several parts at once, or all).
 - "+N" next to the names: a button opens everybody who takes the item (remove people, change their amounts with the wheel).
 - New "Missing items" screen and a "one person" row filter.

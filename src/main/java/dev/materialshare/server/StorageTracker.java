@@ -17,9 +17,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.MinecraftServer;
@@ -153,7 +150,7 @@ public final class StorageTracker {
 
     private static void open(MinecraftServer server, MaterialShareState state, ServerPlayerEntity player, Use use) {
         LAST_USE.remove(player.getUuid());
-        ServerWorld world = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, new Identifier(use.dim())));
+        ServerWorld world = dev.materialshare.McCompat.world(server, use.dim());
         if (world == null || !isStorage(world.getBlockEntity(use.pos())) || projectsAt(state, use.dim(), use.pos()).isEmpty()) {
             return;
         }
@@ -182,7 +179,7 @@ public final class StorageTracker {
         if (stack.isEmpty()) {
             return;
         }
-        direct.merge(Registries.ITEM.getId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
+        direct.merge(dev.materialshare.McCompat.itemId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
         if (depth >= 3) {
             return;
         }
@@ -225,7 +222,7 @@ public final class StorageTracker {
                 state.markDirty();
             }
         }
-        ServerWorld world = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, new Identifier(s.dim)));
+        ServerWorld world = dev.materialshare.McCompat.world(server, s.dim);
         if (world != null) {
             scanChunk(server, state, world, s.dim, s.pos.getX() >> 4, s.pos.getZ() >> 4, projects);
         }
@@ -251,7 +248,7 @@ public final class StorageTracker {
         boolean changed = false;
         java.util.Set<String> seen = new java.util.HashSet<>();
         for (Area area : project.storage().areas()) {
-            ServerWorld world = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, new Identifier(area.dimension())));
+            ServerWorld world = dev.materialshare.McCompat.world(server, area.dimension());
             if (world == null) {
                 continue;
             }
