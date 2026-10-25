@@ -179,9 +179,9 @@ Litematica and malilib screens are only extended with mixin injections, and noth
 | 場所 | 必要なもの |
 |---|---|
 | サーバー | Fabric Loader 0.14.21 以上、Fabric API 0.76.0 以上、**malilib**、**Syncmatica**、**本MOD**(Litematica は不要) |
-| クライアント | 上に加えて、**Litematica**(版は下の表を見てください) |
+| クライアント | 上に加えて、**Litematica**(verは下の表を見てください) |
 
-**対応する版**(Minecraft の版ごとに jar が別です。遊んでいる版に合う jar を使ってください):
+**対応するver**(Minecraft のverごとに jar が別です。遊んでいるverに合う jar を使ってください):
 
 | Minecraft | Litematica | malilib | jar |
 |---|---|---|---|
@@ -194,9 +194,9 @@ Litematica and malilib screens are only extended with mixin injections, and noth
 | 1.19.3 | 0.13.x(確認: 0.13.2) | 0.14.x(確認: 0.14.0) | `...-0.10.0+1.19.3.jar` |
 | 1.19.4 | 0.14.2 以上 0.15.0 未満(確認: 0.14.7) | 0.15.2 以上 0.16.0 未満(確認: 0.15.4) | `...-0.10.0.jar` |
 
-Syncmatica はどの版でも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 は 0.58.0 以上、1.18 と 1.18.1 は 0.44.0 以上)。
+Syncmatica はどのverでも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 は 0.58.0 以上、1.18 と 1.18.1 は 0.44.0 以上)。
 
-- サーバーと全員のクライアントに、**同じ版**の jar を入れてください。版が違うと、参加するときに理由が表示されます。
+- サーバーと全員のクライアントに、**同じver**の jar を入れてください。verが違うと、参加するときに理由が表示されます。
 - 担当管理を始めるには、設計図が Syncmatica で共有されている必要があります。マテリアルリストを開くと、自動で始まります。
 - 任意: Mod Menu(設定画面を開けます)。設定画面は、Litematica のメインメニューからも開けます。
 

@@ -34,7 +34,7 @@
 
 ○ = 私のmodと一緒に正常 / × = 失敗 / 未確認 = 中断のため未試験
 
-| MOD | 試験した版 | サーバー | クライアント |
+| MOD | 試験したver | サーバー | クライアント |
 |---|---|---|---|
 | Lithium | mc1.19.4-0.11.1 | ○ | ○ |
 | FerriteCore | 5.2.0-fabric | ○ | ○ |
@@ -135,7 +135,7 @@
 
 名前: Noisium、ScalableLux、Structure Layout Optimizer、Hydrogen、World Specific View Distance、Recipe Cache、Fast Furnace for Fabric、DeltaLogger、CommandSpy、Erroring Entity Remover、Anonymize、TeamPerms、Better Op、SimpleAuth、Gatekeeper、Simple Anti X-ray、CheaterDeleter、Badlion Client Disabler、Auto Backup、Minesave、Fabric Restart、server-launcher and restarter、ModUpdater、Shut Up Console、Translated Server Log、Fabric Death Messages、Random Server Icon、TabPing、Fabric-Votifier、Discord-Fabric Link、Interweave、DisFabric、DiscordMinecraftFabric、fabric-discord-integration、Discord Fabric Whitelister、BlockBot、MatterLink、TomsServerUtils、TinyMap、FabricHomes、FabricTPA、FabricWarps、GlobalSpawn、Default Spawn Points、More Commands Mod、Command Alias Creator、Slapmap、Taterzens、Shapes Edit、SimpleServerSorter、Lootstrap、InvSync、Configured Keep Inventory、keepinventory-command、SimpleHarvest、Better Signs & Frames、Fat Experience Orbs、Hypnos、BetterSleepPlus、SleepPunisher、Leaf Decay、Fabric Tree Chopper、Trees Do Not Float、Infinite Water Bucket、Compostable Rotten Flesh、Farmable Shulkers、InfiniteVillagerTrading、FabricSit、Home Camp、Fire's Survival Tweaks、PvP toggle、AttackSpeedPlus、Lightning Prevention、Less Annoying Piglins、Stop Strider Suffering、Endermen are Friends、Neutral Mobs、Chat Animation
 
-（Modrinth の検索で見つからなかったか、1.19.4 向けの版が無いものです。名前が違う場合もあります。）
+（Modrinth の検索で見つからなかったか、1.19.4 向けのverが無いものです。名前が違う場合もあります。）
 
 ### 中断のため、クライアントで未確認のもの
 

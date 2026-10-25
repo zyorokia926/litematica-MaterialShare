@@ -39,3 +39,4 @@ Fabric API) exists for the version and that the Litematica build asks for the ma
 - Every text the code uses must exist in both language files (`LangFilesTest`).
 - Buttons must never overlap or overflow at any GUI scale (check new screens at several window sizes).
 - Do not start implementing a feature the owner has only discussed; wait for their go-ahead.
+- On GitHub (README, the docs pushed there, issues and comments) write "ver" instead of "版" for a version, in Japanese. The mod text, the Modrinth descriptions and the other files keep "版". "日本語版/英語版" stays as it is.
