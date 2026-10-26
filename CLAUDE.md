@@ -19,6 +19,12 @@ English. **Whenever a feature is added, changed or removed, update the how-to in
 
 Also keep `README.md`, `dist/modrinth/description_*.md` and `dist/modrinth/changelog.md` in step.
 
+The feature sections of `README.md` (Japanese and English, between the `FEATURES` markers) are generated from the how-to:
+after changing the how-to pages, run `python ports/readme_features.py` and commit the README in the same change (`--check` says
+whether it is out of date). Every feature of the mod must be in the README. When a feature works differently on some Minecraft
+versions, add a note to `VERSION_NOTES` in `ports/readme_features.py` (a "Note for some versions" appears in that feature).
+The owner asked (2026-10-26) that new features are added to the README on GitHub as they come.
+
 ## Minecraft versions
 
 The main build is for 1.19.4. Other versions (1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2, 1.19.3, 1.20.1 to 1.20.6; there is no 1.20 because Litematica has no build for it) are built from the same source with `python3 ports/build.py <version>`
@@ -65,6 +71,11 @@ Fabric API) exists for the version and that the Litematica build asks for the ma
 5. 新しいホットキーと設定は「設定」ページ、新しいチャットコマンドは「コマンド」ページ、新しいツールは「ツール」ページに書きます。
 
 `README.md`、`dist/modrinth/description_*.md`、`dist/modrinth/changelog.md` も、同じ変更の中でそろえます。
+
+`README.md` の機能の節(日本語と英語。`FEATURES` の印の間)は、使い方の画面から自動で作られます。使い方のページを直したら、
+`python ports/readme_features.py` を実行して、同じ変更の中で README も commit します(`--check` で古いかどうかが分かります)。
+MODの機能は、すべて README に載せます。機能が Minecraft の一部のverで違うときは、`ports/readme_features.py` の `VERSION_NOTES` に
+書くと、その機能の説明に「ver ごとの注意」が出ます。新しい機能は、GitHub の README に随時足すように、オーナーから頼まれています(2026-10-26)。
 
 ## Minecraft のver
 
