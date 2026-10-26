@@ -33,7 +33,7 @@ final class RecipeAdapter {
         Map<String, List<Breakdown.Recipe>> byOutput = new HashMap<>();
         if (client.world != null) {
             var manager = client.world.getRecipeManager();
-            for (CraftingRecipe recipe : manager.listAllOfType(RecipeType.CRAFTING)) {
+            for (CraftingRecipe recipe : dev.materialshare.McClientCompat.craftingRecipes(manager)) {
                 ItemStack out = dev.materialshare.McClientCompat.recipeOutput(recipe, client);
                 if (out.isEmpty()) {
                     continue;

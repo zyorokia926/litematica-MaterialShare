@@ -269,7 +269,7 @@ public class MaterialShareState extends PersistentState {
 
     public static MaterialShareState get(MinecraftServer server) {
         migrateOldData(server);
-        return server.getOverworld().getPersistentStateManager()
-                .getOrCreate(MaterialShareState::fromNbt, MaterialShareState::new, KEY);
+        return dev.materialshare.McCompat.persistentState(server.getOverworld().getPersistentStateManager(),
+                MaterialShareState::fromNbt, MaterialShareState::new, KEY);
     }
 }

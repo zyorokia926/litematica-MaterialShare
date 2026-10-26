@@ -1,6 +1,7 @@
 ## 0.10.0
 
-- Now also for Minecraft 1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2 and 1.19.3 (one jar per version, for example `-0.10.0+1.19.2.jar`; the 1.19.4 jar is `-0.10.0.jar`).
+- Now also for Minecraft 1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2, 1.19.3, 1.20.1, 1.20.2, 1.20.3, 1.20.4, 1.20.5 and 1.20.6 (one jar per version, for example `-0.10.0+1.19.2.jar`; the 1.19.4 jar is `-0.10.0.jar`).
+- A player whose client reports its mod channels late (seen with Fabric API 0.91.1 on 1.20.3) now still gets the names, schematics and trash as soon as the mod is known to be there.
 - Sub-regions can be shared part by part from the schematic screen (several parts at once, or all).
 - "+N" next to the names: a button opens everybody who takes the item (remove people, change their amounts with the wheel).
 - New "Missing items" screen and a "one person" row filter.

@@ -28,6 +28,7 @@ public final class TmpProbe {
     static final String ME = CARA ? "Cara" : "Bob";
     static int tick, step, wait, since;
     static boolean connecting;
+    static int tried;
     static MaterialListBase list;
     static String P = "";
     static BlockPos origin;
@@ -76,8 +77,10 @@ public final class TmpProbe {
         ClientTickEvents.END_CLIENT_TICK.register(c -> {
             tick++;
             if (c.world == null || c.player == null) {
-                if (!connecting && tick > 200 && c.currentScreen instanceof TitleScreen) {
+                if ((!connecting || tick - tried > 400) && tick > 200 && c.currentScreen != null
+                        && (c.currentScreen instanceof TitleScreen || c.currentScreen.getClass().getSimpleName().contains("Disconnected"))) {
                     connecting = true;
+                    tried = tick; // the server may still be starting: try again from the title / disconnected screen
                     ConnectScreen.connect(c.currentScreen, c, ServerAddress.parse("127.0.0.1:25565"), new ServerInfo("t", "127.0.0.1:25565", false));
                 }
                 return;

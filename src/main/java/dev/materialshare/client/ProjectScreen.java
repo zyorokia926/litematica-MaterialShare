@@ -11,7 +11,6 @@ import fi.dy.masa.malilib.interfaces.IConfirmationListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 
@@ -253,10 +252,10 @@ public class ProjectScreen extends GuiBase implements NoWheelClick {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
         super.render(matrices, mouseX, mouseY, partialTicks);
         for (Bar bar : bars) {
-            DrawableHelper.fill(matrices, bar.x, bar.y, bar.x + bar.width, bar.y + 2, 0xFF1E1E1E);
+            dev.materialshare.McClientCompat.fill(matrices, bar.x, bar.y, bar.x + bar.width, bar.y + 2, 0xFF1E1E1E);
             int filled = (int) Math.round(bar.width * Math.max(0.0, Math.min(1.0, bar.ratio)));
             if (filled > 0) {
-                DrawableHelper.fill(matrices, bar.x, bar.y, bar.x + filled, bar.y + 2,
+                dev.materialshare.McClientCompat.fill(matrices, bar.x, bar.y, bar.x + filled, bar.y + 2,
                         bar.ratio >= 1.0 ? 0xFF55FF55 : 0xFF55AAFF);
             }
         }

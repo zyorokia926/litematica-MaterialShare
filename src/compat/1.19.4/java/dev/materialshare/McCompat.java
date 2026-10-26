@@ -49,4 +49,28 @@ public final class McCompat {
     public static net.minecraft.text.MutableText translatable(String key) {
         return net.minecraft.text.Text.translatable(key);
     }
+
+    public static <T extends net.minecraft.world.PersistentState> T persistentState(net.minecraft.world.PersistentStateManager manager,
+            java.util.function.Function<net.minecraft.nbt.NbtCompound, T> reader, java.util.function.Supplier<T> factory, String key) {
+        return manager.getOrCreate(reader, factory, key);
+    }
+
+    /** Looks a player up by name at Mojang (through the server's user cache). */
+    public static void findProfile(MinecraftServer server, String name,
+            java.util.function.Consumer<java.util.Optional<com.mojang.authlib.GameProfile>> then) {
+        server.getUserCache().findByNameAsync(name, then);
+    }
+
+    /** Passes on the stacks that lie inside a bundle or a shulker box item. */
+    public static void forEachInside(net.minecraft.item.ItemStack stack, java.util.function.Consumer<net.minecraft.item.ItemStack> sink) {
+        net.minecraft.nbt.NbtCompound tag = stack.getItem() instanceof net.minecraft.item.BundleItem ? stack.getNbt()
+                : net.minecraft.block.Block.getBlockFromItem(stack.getItem()) instanceof net.minecraft.block.ShulkerBoxBlock
+                        ? stack.getSubNbt("BlockEntityTag") : null;
+        if (tag == null) {
+            return;
+        }
+        for (net.minecraft.nbt.NbtElement e : tag.getList("Items", net.minecraft.nbt.NbtElement.COMPOUND_TYPE)) {
+            sink.accept(net.minecraft.item.ItemStack.fromNbt((net.minecraft.nbt.NbtCompound) e));
+        }
+    }
 }

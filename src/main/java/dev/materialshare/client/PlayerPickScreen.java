@@ -76,7 +76,7 @@ public class PlayerPickScreen extends GuiBase implements NoWheelClick {
         search.setMaxLength(16);
         search.setText(query);
         search.setFocused(true);
-        search.setCursorToEnd();
+        dev.materialshare.McClientCompat.cursorToEnd(search);
         addTextField(search, field -> {
             if (!field.getText().equals(query)) {
                 openGui(new PlayerPickScreen(getParent(), project, itemId, itemName, 0, field.getText(), onPick, titleKey));

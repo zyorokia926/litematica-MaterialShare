@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.math.MatrixStack;
@@ -155,7 +154,7 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
     protected void drawContents(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
         super.drawContents(matrices, mouseX, mouseY, partialTicks);
         MinecraftClient client = MinecraftClient.getInstance();
-        client.textRenderer.drawWithShadow(matrices, counter, counterX, counterY, 0xFFAAAAAA);
+        dev.materialshare.McClientCompat.text(client.textRenderer, matrices, counter, counterX, counterY, 0xFFAAAAAA);
         Page p = PAGES.get(page);
         int x = 14;
         int width = Math.min(this.width - 28, 620);
@@ -171,8 +170,8 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
         RenderSystem.disableScissor();
         contentHeight = y + scroll - contentTop + 4;
         if (contentHeight > visible) {
-            client.textRenderer.drawWithShadow(matrices, scroll > 0 ? "▲" : " ", this.width - 14, contentTop, 0xFFAAAAAA);
-            client.textRenderer.drawWithShadow(matrices, scroll < contentHeight - visible ? "▼" : " ", this.width - 14, bottom - 9, 0xFFAAAAAA);
+            dev.materialshare.McClientCompat.text(client.textRenderer, matrices, scroll > 0 ? "▲" : " ", this.width - 14, contentTop, 0xFFAAAAAA);
+            dev.materialshare.McClientCompat.text(client.textRenderer, matrices, scroll < contentHeight - visible ? "▼" : " ", this.width - 14, bottom - 9, 0xFFAAAAAA);
         }
     }
 
@@ -196,13 +195,12 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
             int[] size = sizeOf(id);
             int w = Math.min(each, size[0]);
             int h = Math.max(1, size[1] * w / size[0]);
-            RenderSystem.setShaderTexture(0, id);
             RenderSystem.enableBlend();
-            DrawableHelper.drawTexture(matrices, cx, y, w, h, 0, 0, size[0], size[1], size[0], size[1]);
-            DrawableHelper.fill(matrices, cx - 1, y - 1, cx + w + 1, y, 0xFF888888);
-            DrawableHelper.fill(matrices, cx - 1, y + h, cx + w + 1, y + h + 1, 0xFF888888);
-            DrawableHelper.fill(matrices, cx - 1, y, cx, y + h, 0xFF888888);
-            DrawableHelper.fill(matrices, cx + w, y, cx + w + 1, y + h, 0xFF888888);
+            dev.materialshare.McClientCompat.texture(matrices, id, cx, y, w, h, 0, 0, size[0], size[1], size[0], size[1]);
+            dev.materialshare.McClientCompat.fill(matrices, cx - 1, y - 1, cx + w + 1, y, 0xFF888888);
+            dev.materialshare.McClientCompat.fill(matrices, cx - 1, y + h, cx + w + 1, y + h + 1, 0xFF888888);
+            dev.materialshare.McClientCompat.fill(matrices, cx - 1, y, cx, y + h, 0xFF888888);
+            dev.materialshare.McClientCompat.fill(matrices, cx + w, y, cx + w + 1, y + h, 0xFF888888);
             if (sideBySide) {
                 cx += each + 8;
                 rowBottom = Math.max(rowBottom, y + h + 8);

@@ -93,7 +93,7 @@ abstract class SearchListScreen<T> extends GuiBase implements NoWheelClick {
         search.setMaxLength(64);
         search.setText(query);
         search.setFocused(true);
-        search.setCursorToEnd();
+        dev.materialshare.McClientCompat.cursorToEnd(search);
         addTextField(search, field -> {
             if (!field.getText().equals(query)) {
                 openGui(reopen(0, field.getText()));

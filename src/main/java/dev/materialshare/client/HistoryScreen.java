@@ -72,7 +72,7 @@ public class HistoryScreen extends GuiBase implements NoWheelClick {
         search.setMaxLength(48);
         search.setText(query);
         search.setFocused(true);
-        search.setCursorToEnd();
+        dev.materialshare.McClientCompat.cursorToEnd(search);
         addTextField(search, field -> {
             if (!field.getText().equals(query)) {
                 openGui(new HistoryScreen(getParent(), project, 0, false, field.getText()));

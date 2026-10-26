@@ -149,7 +149,7 @@ abstract class GridScreen extends GuiBase implements NoWheelClick {
             UiText.drawWrapped(matrices, info, 12, infoY, this.width - 24, 0xFFDDDDDD);
         }
         for (int[] u : tabUnderline) {
-            net.minecraft.client.gui.DrawableHelper.fill(matrices, u[0], u[1], u[0] + u[2], u[1] + 2, 0xFFFFD866);
+            dev.materialshare.McClientCompat.fill(matrices, u[0], u[1], u[0] + u[2], u[1] + 2, 0xFFFFD866);
         }
         if (pages > 1) {
             drawStringWithShadow(matrices, Lang.t("common.page", shownPage + 1, pages), 12 + 2 * navW() + 16, this.height - 22,

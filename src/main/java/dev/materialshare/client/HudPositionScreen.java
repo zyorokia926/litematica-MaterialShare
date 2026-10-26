@@ -6,7 +6,6 @@ import fi.dy.masa.malilib.config.ConfigManager;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 
@@ -99,10 +98,10 @@ public class HudPositionScreen extends GuiBase {
         int[] at = boxOrigin();
         int[] size = HudOverlay.size(layout);
         int border = dragging ? 0xFFFFFF55 : 0xFFAAAAAA;
-        DrawableHelper.fill(matrices, at[0] - 2, at[1] - 2, at[0] + size[0] + 2, at[1] - 1, border);
-        DrawableHelper.fill(matrices, at[0] - 2, at[1] + size[1] + 1, at[0] + size[0] + 2, at[1] + size[1] + 2, border);
-        DrawableHelper.fill(matrices, at[0] - 2, at[1] - 1, at[0] - 1, at[1] + size[1] + 1, border);
-        DrawableHelper.fill(matrices, at[0] + size[0] + 1, at[1] - 1, at[0] + size[0] + 2, at[1] + size[1] + 1, border);
+        dev.materialshare.McClientCompat.fill(matrices, at[0] - 2, at[1] - 2, at[0] + size[0] + 2, at[1] - 1, border);
+        dev.materialshare.McClientCompat.fill(matrices, at[0] - 2, at[1] + size[1] + 1, at[0] + size[0] + 2, at[1] + size[1] + 2, border);
+        dev.materialshare.McClientCompat.fill(matrices, at[0] - 2, at[1] - 1, at[0] - 1, at[1] + size[1] + 1, border);
+        dev.materialshare.McClientCompat.fill(matrices, at[0] + size[0] + 1, at[1] - 1, at[0] + size[0] + 2, at[1] + size[1] + 1, border);
         HudOverlay.draw(matrices, client, layout, at[0], at[1]);
         UiText.drawWrapped(matrices, Lang.t("hudplace.help"), 12, 28, Math.min(this.width - 24, 420), 0xFFDDDDDD);
     }

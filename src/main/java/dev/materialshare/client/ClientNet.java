@@ -33,6 +33,7 @@ public final class ClientNet implements ClientModInitializer {
     }
 
     public static void register() {
+        dev.materialshare.McNet.init();
         ClientLoginNetworking.registerGlobalReceiver(Packets.HELLO,
                 (client, handler, buf, listenerAdder) -> {
                     PacketByteBuf reply = PacketByteBufs.create();
@@ -40,7 +41,7 @@ public final class ClientNet implements ClientModInitializer {
                     return CompletableFuture.completedFuture(reply);
                 });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.SNAPSHOT, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.SNAPSHOT, (client, handler, buf, sender) -> {
             int n = buf.readVarInt();
             List<Project> projects = new ArrayList<>();
             for (int i = 0; i < n; i++) {
@@ -49,33 +50,33 @@ public final class ClientNet implements ClientModInitializer {
             client.execute(() -> ClientProjectCache.replaceAll(projects));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.PROJECT_CHANGED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.PROJECT_CHANGED, (client, handler, buf, sender) -> {
             Project project = Packets.readProject(buf);
             client.execute(() -> ClientProjectCache.put(project));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.ITEM_CHANGED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.ITEM_CHANGED, (client, handler, buf, sender) -> {
             Packets.ItemUpdate update = Packets.readItem(buf);
             client.execute(() -> ClientProjectCache.putItem(update));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.PROJECT_DELETED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.PROJECT_DELETED, (client, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             client.execute(() -> ClientProjectCache.remove(name));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.PLAYER_NAMES, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.PLAYER_NAMES, (client, handler, buf, sender) -> {
             Map<UUID, String> names = Packets.readNames(buf);
             client.execute(() -> ClientProjectCache.setNames(names));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.CREATE_FAILED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.CREATE_FAILED, (client, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             int reason = buf.readVarInt();
             client.execute(() -> ProjectNames.onCreateFailed(name, reason));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.LOOKUP_RESULT, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.LOOKUP_RESULT, (client, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             boolean found = buf.readBoolean();
             client.execute(() -> {
@@ -88,12 +89,12 @@ public final class ClientNet implements ClientModInitializer {
             });
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.TRASH_LIST, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.TRASH_LIST, (client, handler, buf, sender) -> {
             var list = Packets.readTrash(buf);
             client.execute(() -> ClientProjectCache.setTrash(list));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.TRASH_FAILED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.TRASH_FAILED, (client, handler, buf, sender) -> {
             int reason = buf.readVarInt();
             String name = buf.readString(Packets.MAX_STRING);
             client.execute(() -> InfoUtils.showGuiMessage(Message.MessageType.ERROR,
@@ -105,12 +106,12 @@ public final class ClientNet implements ClientModInitializer {
                     }, UiText.escapeFormat(name))));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.FEED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.FEED, (client, handler, buf, sender) -> {
             var feed = Packets.readFeed(buf);
             client.execute(() -> ClientProjectCache.setFeed(feed));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.ACTION_FAILED, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.ACTION_FAILED, (client, handler, buf, sender) -> {
             int reason = buf.readVarInt();
             String name = buf.readString(Packets.MAX_STRING);
             client.execute(() -> InfoUtils.showGuiMessage(Message.MessageType.ERROR,
@@ -122,27 +123,27 @@ public final class ClientNet implements ClientModInitializer {
                     }, UiText.escapeFormat(name))));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.SURPLUS, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.SURPLUS, (client, handler, buf, sender) -> {
             Packets.SurplusList list = Packets.readSurplus(buf);
             client.execute(() -> ClientProjectCache.setSurplus(list));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.STORAGE, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.STORAGE, (client, handler, buf, sender) -> {
             Packets.StorageData data = Packets.readStorage(buf);
             client.execute(() -> ClientProjectCache.setStorage(data));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.ACTIVITY, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.ACTIVITY, (client, handler, buf, sender) -> {
             Packets.ActivityData data = Packets.readActivity(buf);
             client.execute(() -> ClientProjectCache.setActivity(data));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.REMOVED_ITEMS, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.REMOVED_ITEMS, (client, handler, buf, sender) -> {
             Packets.RemovedList list = Packets.readRemoved(buf);
             client.execute(() -> ClientProjectCache.setRemoved(list));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Packets.HISTORY, (client, handler, buf, sender) -> {
+        dev.materialshare.McClientNet.receive(Packets.HISTORY, (client, handler, buf, sender) -> {
             Packets.HistoryReply reply = Packets.readHistory(buf);
             client.execute(() -> ClientProjectCache.setHistory(reply));
         });
@@ -168,21 +169,21 @@ public final class ClientNet implements ClientModInitializer {
                 buf.writeString(e.getKey(), Packets.MAX_STRING);
                 buf.writeVarInt(e.getValue());
             }
-            ClientPlayNetworking.send(Packets.CREATE, buf);
+            dev.materialshare.McClientNet.send(Packets.CREATE, buf);
             from += CREATE_CHUNK;
         } while (from < all.size());
     }
 
     /** Asks the server to add everyone from its usercache to the known players. */
     public static void requestPlayers() {
-        ClientPlayNetworking.send(Packets.REQUEST_PLAYERS, PacketByteBufs.create());
+        dev.materialshare.McClientNet.send(Packets.REQUEST_PLAYERS, PacketByteBufs.create());
     }
 
     /** Asks the server to find a player by exact name and remember them. */
     public static void sendLookup(String name) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(name, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.LOOKUP_PLAYER, buf);
+        dev.materialshare.McClientNet.send(Packets.LOOKUP_PLAYER, buf);
     }
 
     public static void sendItemInfo(String project, String itemId, boolean priority) {
@@ -197,14 +198,14 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeBoolean(priority);
         buf.writeString(dev.materialshare.common.Entry.cleanText(substitute), Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.SET_ITEM_INFO, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_ITEM_INFO, buf);
     }
 
     /** Sets what each claimant of an item promises to collect (players not listed lose their promise). */
     public static void sendTargets(String project, String itemId, Map<UUID, Integer> targets) {
         PacketByteBuf buf = PacketByteBufs.create();
         Packets.writeTargets(buf, project, itemId, targets);
-        ClientPlayNetworking.send(Packets.SET_TARGETS, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_TARGETS, buf);
     }
 
     public static void sendTransfer(String project, String itemId, UUID from, UUID to) {
@@ -214,7 +215,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeUuid(from);
         buf.writeUuid(to);
-        ClientPlayNetworking.send(Packets.TRANSFER, buf);
+        dev.materialshare.McClientNet.send(Packets.TRANSFER, buf);
     }
 
     public static void sendDelivered(String project, String itemId, UUID target, int n) {
@@ -223,7 +224,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeUuid(target);
         buf.writeVarInt(n);
-        ClientPlayNetworking.send(Packets.SET_DELIVERED, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_DELIVERED, buf);
     }
 
     /** The player's own delivered counts for many items (chunked like the other bulk packets). */
@@ -238,7 +239,7 @@ public final class ClientNet implements ClientModInitializer {
             all.subList(from, Math.min(all.size(), from + Packets.BULK_CHUNK)).forEach(e -> chunk.put(e.getKey(), e.getValue()));
             PacketByteBuf buf = PacketByteBufs.create();
             Packets.writeImport(buf, project, chunk);
-            ClientPlayNetworking.send(channel, buf);
+            dev.materialshare.McClientNet.send(channel, buf);
         }
     }
 
@@ -256,7 +257,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString("");
         buf.writeBoolean(true);
         buf.writeUuid(player);
-        ClientPlayNetworking.send(Packets.RESET_CLAIMS, buf);
+        dev.materialshare.McClientNet.send(Packets.RESET_CLAIMS, buf);
     }
 
     /** An empty item id means every item. */
@@ -266,28 +267,28 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(project);
         buf.writeString(itemId);
         buf.writeBoolean(false);
-        ClientPlayNetworking.send(Packets.RESET_CLAIMS, buf);
+        dev.materialshare.McClientNet.send(Packets.RESET_CLAIMS, buf);
     }
 
     public static void sendRestoreItem(String project, String itemId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project);
         buf.writeString(itemId);
-        ClientPlayNetworking.send(Packets.RESTORE_ITEM, buf);
+        dev.materialshare.McClientNet.send(Packets.RESTORE_ITEM, buf);
     }
 
     public static void sendRemoveItem(String project, String itemId) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeString(itemId, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.REMOVE_ITEM, buf);
+        dev.materialshare.McClientNet.send(Packets.REMOVE_ITEM, buf);
     }
 
     public static void sendRename(String from, String to) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(from, Packets.MAX_STRING);
         buf.writeString(to, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.RENAME, buf);
+        dev.materialshare.McClientNet.send(Packets.RENAME, buf);
     }
 
     public static void sendClone(String from, String to, boolean keepClaims) {
@@ -295,7 +296,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(from, Packets.MAX_STRING);
         buf.writeString(to, Packets.MAX_STRING);
         buf.writeBoolean(keepClaims);
-        ClientPlayNetworking.send(Packets.CLONE, buf);
+        dev.materialshare.McClientNet.send(Packets.CLONE, buf);
     }
 
     /** New required amounts after the design changed (sent in chunks, each one adds and changes items). */
@@ -310,7 +311,7 @@ public final class ClientNet implements ClientModInitializer {
                 buf.writeString(e.getKey(), Packets.MAX_STRING);
                 buf.writeVarInt(e.getValue());
             }
-            ClientPlayNetworking.send(Packets.UPDATE_REQUIRED, buf);
+            dev.materialshare.McClientNet.send(Packets.UPDATE_REQUIRED, buf);
             if (all.isEmpty()) {
                 break;
             }
@@ -318,32 +319,32 @@ public final class ClientNet implements ClientModInitializer {
     }
 
     public static void requestFeed() {
-        ClientPlayNetworking.send(Packets.FEED_REQUEST, PacketByteBufs.create());
+        dev.materialshare.McClientNet.send(Packets.FEED_REQUEST, PacketByteBufs.create());
     }
 
     public static void sendArchive(String project, boolean archived) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeBoolean(archived);
-        ClientPlayNetworking.send(Packets.SET_ARCHIVED, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_ARCHIVED, buf);
     }
 
     public static void sendTrashRestore(long id) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeLong(id);
-        ClientPlayNetworking.send(Packets.TRASH_RESTORE, buf);
+        dev.materialshare.McClientNet.send(Packets.TRASH_RESTORE, buf);
     }
 
     public static void sendTrashPurge(long id) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeLong(id);
-        ClientPlayNetworking.send(Packets.TRASH_PURGE, buf);
+        dev.materialshare.McClientNet.send(Packets.TRASH_PURGE, buf);
     }
 
     public static void sendDelete(String project) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.DELETE, buf);
+        dev.materialshare.McClientNet.send(Packets.DELETE, buf);
     }
 
     /** A claim made by the player: remembered so it can be undone. */
@@ -367,7 +368,7 @@ public final class ClientNet implements ClientModInitializer {
         for (int from = 0; from < list.size(); from += Packets.BULK_CHUNK) {
             PacketByteBuf buf = PacketByteBufs.create();
             Packets.writeBulk(buf, project, list.subList(from, Math.min(list.size(), from + Packets.BULK_CHUNK)));
-            ClientPlayNetworking.send(Packets.BULK_CLAIM, buf);
+            dev.materialshare.McClientNet.send(Packets.BULK_CLAIM, buf);
         }
     }
 
@@ -380,7 +381,7 @@ public final class ClientNet implements ClientModInitializer {
                     .forEach(e -> chunk.put(e.getKey(), e.getValue()));
             PacketByteBuf buf = PacketByteBufs.create();
             Packets.writeImport(buf, project, chunk);
-            ClientPlayNetworking.send(Packets.BULK_COLLECTED, buf);
+            dev.materialshare.McClientNet.send(Packets.BULK_COLLECTED, buf);
         }
     }
 
@@ -388,7 +389,7 @@ public final class ClientNet implements ClientModInitializer {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeString(note, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.SET_NOTE, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_NOTE, buf);
     }
 
     /** Offers {@code n} spare pieces of an item to the others (0 takes the offer back). */
@@ -397,7 +398,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeVarInt(n);
-        ClientPlayNetworking.send(Packets.SET_SURPLUS, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_SURPLUS, buf);
     }
 
     /** Takes {@code n} pieces from somebody's offer. */
@@ -407,32 +408,32 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeUuid(from);
         buf.writeVarInt(n);
-        ClientPlayNetworking.send(Packets.TAKE_SURPLUS, buf);
+        dev.materialshare.McClientNet.send(Packets.TAKE_SURPLUS, buf);
     }
 
     public static void sendStorageAdd(String project, dev.materialshare.common.Area area) {
         PacketByteBuf buf = PacketByteBufs.create();
         Packets.writeAreaAdd(buf, project, area);
-        ClientPlayNetworking.send(Packets.STORAGE_ADD, buf);
+        dev.materialshare.McClientNet.send(Packets.STORAGE_ADD, buf);
     }
 
     public static void sendStorageRemove(String project, int index) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeVarInt(index);
-        ClientPlayNetworking.send(Packets.STORAGE_REMOVE, buf);
+        dev.materialshare.McClientNet.send(Packets.STORAGE_REMOVE, buf);
     }
 
     static void requestActivity(String project) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.ACTIVITY_REQUEST, buf);
+        dev.materialshare.McClientNet.send(Packets.ACTIVITY_REQUEST, buf);
     }
 
     public static void requestHistory(String project) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeString(project, Packets.MAX_STRING);
-        ClientPlayNetworking.send(Packets.HISTORY_REQUEST, buf);
+        dev.materialshare.McClientNet.send(Packets.HISTORY_REQUEST, buf);
     }
 
     static void sendClaimRaw(String project, String itemId, UUID target, boolean on) {
@@ -446,7 +447,7 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeUuid(target);
         buf.writeBoolean(on);
-        ClientPlayNetworking.send(Packets.CLAIM, buf);
+        dev.materialshare.McClientNet.send(Packets.CLAIM, buf);
     }
 
     static void sendCollectedRaw(String project, String itemId, UUID target, int n) {
@@ -455,6 +456,6 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(itemId, Packets.MAX_STRING);
         buf.writeUuid(target);
         buf.writeVarInt(n);
-        ClientPlayNetworking.send(Packets.SET_COLLECTED, buf);
+        dev.materialshare.McClientNet.send(Packets.SET_COLLECTED, buf);
     }
 }

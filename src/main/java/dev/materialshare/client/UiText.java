@@ -21,7 +21,7 @@ public final class UiText {
     static int drawWrapped(MatrixStack matrices, String text, int x, int y, int maxWidth, int color) {
         TextRenderer font = MinecraftClient.getInstance().textRenderer;
         for (String line : wrap(text, Math.max(40, maxWidth))) {
-            font.drawWithShadow(matrices, line, x, y, color);
+            dev.materialshare.McClientCompat.text(font, matrices, line, x, y, color);
             y += LINE_HEIGHT;
         }
         return y;

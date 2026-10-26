@@ -2,7 +2,7 @@
 
 **English** | [日本語はこの下にあります (Japanese below)](#日本語)
 
-*An unofficial add-on for Litematica, not affiliated with its authors. Fabric, Minecraft 1.18 to 1.19.4.*
+*An unofficial add-on for Litematica, not affiliated with its authors. Fabric, Minecraft 1.18 to 1.20.6 (not 1.20).*
 
 ---
 
@@ -60,8 +60,16 @@ When you build together, somebody always asks "who takes the redstone?" and "how
 | 1.19.2 | 0.12.x (tested: 0.12.7) | 0.13.x (tested: 0.13.0) | `...-0.10.0+1.19.2.jar` |
 | 1.19.3 | 0.13.x (tested: 0.13.2) | 0.14.x (tested: 0.14.0) | `...-0.10.0+1.19.3.jar` |
 | 1.19.4 | 0.14.2 or newer, older than 0.15.0 (tested: 0.14.7) | 0.15.2 or newer, older than 0.16.0 (tested: 0.15.4) | `...-0.10.0.jar` |
+| 1.20.1 | 0.15.x (tested: 0.15.4) | 0.16.x (tested: 0.16.3) | `...-0.10.0+1.20.1.jar` |
+| 1.20.2 | 0.16.x (tested: 0.16.1) | 0.17.x (tested: 0.17.0) | `...-0.10.0+1.20.2.jar` |
+| 1.20.3 | 0.17.x (tested: 0.17.4) | 0.18.x (tested: 0.18.3) | `...-0.10.0+1.20.3.jar` |
+| 1.20.4 | 0.17.x (tested: 0.17.4) | 0.18.x (tested: 0.18.3) | `...-0.10.0+1.20.4.jar` |
+| 1.20.5 | 0.18.x (tested: 0.18.3) | 0.19.x (tested: 0.19.2) | `...-0.10.0+1.20.5.jar` |
+| 1.20.6 | 0.18.x (tested: 0.18.3) | 0.19.x (tested: 0.19.2) | `...-0.10.0+1.20.6.jar` |
 
 Syncmatica: any version. Fabric API: 0.76.0 or newer (1.19 and 1.19.1: 0.58.0 or newer; 1.18 and 1.18.1: 0.44.0 or newer).
+
+Fabric API for 1.20.x: 1.20.1 0.92.2 or newer, 1.20.2 0.91.6, 1.20.3 0.91.1, 1.20.4 0.97.2, 1.20.5 0.97.8, 1.20.6 0.100.8 (each or newer). Minecraft 1.20.5 and 1.20.6 need Java 21. There is no jar for Minecraft 1.20 itself, because Litematica has no build for it (use 1.20.1).
 
 - Put the **same version** of the jar on the server and on every client. If the versions differ, the reason is shown when joining.
 - A schematic must be shared with Syncmatica to be tracked. Open its material list and tracking starts by itself.
@@ -137,8 +145,16 @@ Litematica and malilib screens are only extended with mixin injections, and noth
 | 1.19.2 | 0.12.x(確認: 0.12.7) | 0.13.x(確認: 0.13.0) | `...-0.10.0+1.19.2.jar` |
 | 1.19.3 | 0.13.x(確認: 0.13.2) | 0.14.x(確認: 0.14.0) | `...-0.10.0+1.19.3.jar` |
 | 1.19.4 | 0.14.2 以上 0.15.0 未満(確認: 0.14.7) | 0.15.2 以上 0.16.0 未満(確認: 0.15.4) | `...-0.10.0.jar` |
+| 1.20.1 | 0.15.x(確認: 0.15.4) | 0.16.x(確認: 0.16.3) | `...-0.10.0+1.20.1.jar` |
+| 1.20.2 | 0.16.x(確認: 0.16.1) | 0.17.x(確認: 0.17.0) | `...-0.10.0+1.20.2.jar` |
+| 1.20.3 | 0.17.x(確認: 0.17.4) | 0.18.x(確認: 0.18.3) | `...-0.10.0+1.20.3.jar` |
+| 1.20.4 | 0.17.x(確認: 0.17.4) | 0.18.x(確認: 0.18.3) | `...-0.10.0+1.20.4.jar` |
+| 1.20.5 | 0.18.x(確認: 0.18.3) | 0.19.x(確認: 0.19.2) | `...-0.10.0+1.20.5.jar` |
+| 1.20.6 | 0.18.x(確認: 0.18.3) | 0.19.x(確認: 0.19.2) | `...-0.10.0+1.20.6.jar` |
 
 Syncmatica はどのverでも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 は 0.58.0 以上、1.18 と 1.18.1 は 0.44.0 以上)。
+
+1.20.x の Fabric API: 1.20.1 は 0.92.2 以上、1.20.2 は 0.91.6 以上、1.20.3 は 0.91.1 以上、1.20.4 は 0.97.2 以上、1.20.5 は 0.97.8 以上、1.20.6 は 0.100.8 以上。Minecraft 1.20.5 と 1.20.6 は Java 21 が必要です。Minecraft 1.20 そのものの jar はありません(Litematica に 1.20 用の build が無いため。1.20.1 を使ってください)。
 
 - サーバーと全員のクライアントに、**同じver**の jar を入れてください。verが違うと、参加するときに理由が表示されます。
 - 担当管理を始めるには、設計図が Syncmatica で共有されている必要があります。マテリアルリストを開くと、自動で始まります。

@@ -119,11 +119,7 @@ final class MojangProfiles {
                 GameProfile gp = new GameProfile(id, shownName);
                 gp.getProperties().put("textures", new Property("textures", raw));
                 // the callback comes when the picture has been downloaded and registered
-                client.getSkinProvider().loadSkin(gp, (type, identifier, texture) -> {
-                    if (type == com.mojang.authlib.minecraft.MinecraftProfileTexture.Type.SKIN) {
-                        SKINS.put(id, identifier);
-                    }
-                }, false);
+                dev.materialshare.McClientCompat.loadSkin(client, gp, identifier -> SKINS.put(id, identifier));
             }
         });
     }

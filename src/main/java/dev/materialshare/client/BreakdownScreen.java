@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
@@ -190,7 +189,7 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
         search.setMaxLength(32);
         search.setText(query);
         search.setFocused(!query.isEmpty());
-        search.setCursorToEnd();
+        dev.materialshare.McClientCompat.cursorToEnd(search);
         addTextField(search, field -> {
             if (!field.getText().equals(query)) {
                 openGui(new BreakdownScreen(getParent(), project, 0, field.getText()));
@@ -374,10 +373,10 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
         MinecraftClient client = MinecraftClient.getInstance();
         TextRenderer font = client.textRenderer;
         for (int[] u : underlines) {
-            DrawableHelper.fill(matrices, u[0], u[1], u[0] + u[2], u[1] + 2, u[3]);
+            dev.materialshare.McClientCompat.fill(matrices, u[0], u[1], u[0] + u[2], u[1] + 2, u[3]);
         }
         drawLegend(matrices, font);
-        DrawableHelper.fill(matrices, areaX, areaY, areaX + areaW, areaY + areaH, 0x66000000);
+        dev.materialshare.McClientCompat.fill(matrices, areaX, areaY, areaX + areaW, areaY + areaH, 0x66000000);
         if (empty) {
             drawStringWithShadow(matrices, UiText.fit(noMatch ? Lang.t("list.nomatch") : Lang.t("breakdown.empty"), areaW - 16), areaX + 8, areaY + 8, 0xFFFFFFFF);
             return;
@@ -387,20 +386,15 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
                 (int) (areaW * scale), (int) (areaH * scale));
         // The map is drawn in its own units, scaled through the model view matrix: boxes, text and item icons all go
         // through it, so one transform moves and scales everything (the matrix stack given here is left alone).
-        var modelView = RenderSystem.getModelViewStack();
-        modelView.push();
-        modelView.translate(areaX + panX, areaY + panY, 0);
-        modelView.scale(zoom, zoom, 1.0F);
-        RenderSystem.applyModelViewMatrix();
-        MatrixStack mapStack = new MatrixStack();
+        dev.materialshare.McClientCompat.beginMapTransform(areaX + panX, areaY + panY, zoom);
+        var mapStack = dev.materialshare.McClientCompat.freshStack(matrices);
         hoverOn = inArea(mouseX, mouseY);
         hoverX = (mouseX - areaX - panX) / zoom;
         hoverY = (mouseY - areaY - panY) / zoom;
         drawEdges(mapStack, root, 0, 0);
         Placed[] hovered = {null};
         drawNodes(mapStack, font, root, 0, 0, hovered);
-        modelView.pop();
-        RenderSystem.applyModelViewMatrix();
+        dev.materialshare.McClientCompat.endMapTransform();
         RenderSystem.disableScissor();
         drawScrollbars(matrices);
         if (hovered[0] != null && inArea(mouseX, mouseY)) {
@@ -425,17 +419,17 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
     private void drawScrollbars(MatrixStack matrices) {
         if (tallerThanArea()) {
             int x = areaX + areaW - BAR;
-            DrawableHelper.fill(matrices, x, areaY, x + BAR, areaY + areaH, 0x66000000);
+            dev.materialshare.McClientCompat.fill(matrices, x, areaY, x + BAR, areaY + areaH, 0x66000000);
             int thumb = thumbSize(areaH, scaledH());
             int y = areaY + (int) ((long) -panY * (areaH - thumb) / Math.max(1, scaledH() - areaH));
-            DrawableHelper.fill(matrices, x + 1, y, x + BAR - 1, y + thumb, dragBar == 1 ? 0xFFFFFFFF : 0xFFAAAAAA);
+            dev.materialshare.McClientCompat.fill(matrices, x + 1, y, x + BAR - 1, y + thumb, dragBar == 1 ? 0xFFFFFFFF : 0xFFAAAAAA);
         }
         if (widerThanArea()) {
             int y = areaY + areaH - BAR;
-            DrawableHelper.fill(matrices, areaX, y, areaX + areaW, y + BAR, 0x66000000);
+            dev.materialshare.McClientCompat.fill(matrices, areaX, y, areaX + areaW, y + BAR, 0x66000000);
             int thumb = thumbSize(areaW, scaledW());
             int x = areaX + (int) ((long) -panX * (areaW - thumb) / Math.max(1, scaledW() - areaW));
-            DrawableHelper.fill(matrices, x, y + 1, x + thumb, y + BAR - 1, dragBar == 2 ? 0xFFFFFFFF : 0xFFAAAAAA);
+            dev.materialshare.McClientCompat.fill(matrices, x, y + 1, x + thumb, y + BAR - 1, dragBar == 2 ? 0xFFFFFFFF : 0xFFAAAAAA);
         }
     }
 
@@ -487,8 +481,8 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
             if (x + w > this.width - 8) {
                 break;
             }
-            DrawableHelper.fill(matrices, x, y + 1, x + 8, y + 9, (int) item[0]);
-            font.drawWithShadow(matrices, text, x + 11, y, 0xFFDDDDDD);
+            dev.materialshare.McClientCompat.fill(matrices, x, y + 1, x + 8, y + 9, (int) item[0]);
+            dev.materialshare.McClientCompat.text(font, matrices, text, x + 11, y, 0xFFDDDDDD);
             x += w;
         }
     }
@@ -501,9 +495,9 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
             int y2 = oy + kid.y + NODE_H / 2;
             int mid = x1 + (x2 - x1) / 2;
             int color = kid.color() & 0xCCFFFFFF;
-            DrawableHelper.fill(matrices, x1, y1, mid + 1, y1 + 1, color);
-            DrawableHelper.fill(matrices, mid, Math.min(y1, y2), mid + 1, Math.max(y1, y2) + 1, color);
-            DrawableHelper.fill(matrices, mid, y2, x2, y2 + 1, color);
+            dev.materialshare.McClientCompat.fill(matrices, x1, y1, mid + 1, y1 + 1, color);
+            dev.materialshare.McClientCompat.fill(matrices, mid, Math.min(y1, y2), mid + 1, Math.max(y1, y2) + 1, color);
+            dev.materialshare.McClientCompat.fill(matrices, mid, y2, x2, y2 + 1, color);
             drawEdges(matrices, kid, ox, oy);
         }
     }
@@ -520,21 +514,21 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
             hovered[0] = p;
         }
         int color = p.color();
-        DrawableHelper.fill(matrices, x, y, x + p.w, y + NODE_H, color);
-        DrawableHelper.fill(matrices, x + 1, y + 1, x + p.w - 1, y + NODE_H - 1, over ? 0xFF2A3345 : 0xF0151A22);
-        DrawableHelper.fill(matrices, x + 1, y + 1, x + 4, y + NODE_H - 1, color);
+        dev.materialshare.McClientCompat.fill(matrices, x, y, x + p.w, y + NODE_H, color);
+        dev.materialshare.McClientCompat.fill(matrices, x + 1, y + 1, x + p.w - 1, y + NODE_H - 1, over ? 0xFF2A3345 : 0xF0151A22);
+        dev.materialshare.McClientCompat.fill(matrices, x + 1, y + 1, x + 4, y + NODE_H - 1, color);
         int textX = x + 6;
         if (p.kind == Kind.ROOT) {
-            font.drawWithShadow(matrices, UiText.fit(p.name, p.w - p.countW - 18), textX, y + 5, 0xFFFFE9B0);
-            font.drawWithShadow(matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
+            dev.materialshare.McClientCompat.text(font, matrices, UiText.fit(p.name, p.w - p.countW - 18), textX, y + 5, 0xFFFFE9B0);
+            dev.materialshare.McClientCompat.text(font, matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
         } else {
             Identifier id = Identifier.tryParse(p.itemId);
             if (id != null && dev.materialshare.McCompat.hasItem(id)) {
                 // the icon is drawn smaller than the box is high, so it stays inside the frame
                 dev.materialshare.McClientCompat.renderItemIcon(client(), matrices, new ItemStack(dev.materialshare.McCompat.item(id)), textX, y + 1);
             }
-            font.drawWithShadow(matrices, UiText.fit(p.name, p.w - p.countW - ICON - 18), textX + ICON + 2, y + 5, 0xFFFFFFFF);
-            font.drawWithShadow(matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
+            dev.materialshare.McClientCompat.text(font, matrices, UiText.fit(p.name, p.w - p.countW - ICON - 18), textX + ICON + 2, y + 5, 0xFFFFFFFF);
+            dev.materialshare.McClientCompat.text(font, matrices, p.count, x + p.w - p.countW - 6, y + 5, 0xFFFFFFFF);
         }
         for (Placed kid : p.kids) {
             drawNodes(matrices, font, kid, ox, oy, hovered);
@@ -573,6 +567,6 @@ class BreakdownScreen extends GuiBase implements NoWheelClick {
                 lines.add(dev.materialshare.McCompat.literal("§d" + Lang.t("row.surplus", ClientProjectCache.nameOf(offer.player()), offer.count())));
             }
         }
-        renderOrderedTooltip(matrices, UiText.tipLines(lines), mx, my);
+        dev.materialshare.McClientCompat.tooltip(this, matrices, UiText.tipLines(lines), mx, my);
     }
 }

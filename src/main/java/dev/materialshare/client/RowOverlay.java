@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.network.PlayerListEntry;
@@ -106,7 +105,7 @@ public final class RowOverlay {
         Entry progress = ClientProjectCache.selected().map(p -> p.items().get(itemId(entry))).orElse(null);
         if (Configs.Generic.SHOW_OVERLAY.getBooleanValue() && Configs.Generic.HIGHLIGHT_DONE_ROWS.getBooleanValue()
                 && progress != null && progress.collectedTotal() >= progress.required()) {
-            DrawableHelper.fill(matrices, row.getX(), row.getY(), row.getX() + row.getWidth(),
+            dev.materialshare.McClientCompat.fill(matrices, row.getX(), row.getY(), row.getX() + row.getWidth(),
                     row.getY() + row.getHeight(), 0x3355FF55);
         }
         for (Cell cell : layout(row, entry, x0)) {
@@ -117,7 +116,7 @@ public final class RowOverlay {
                 case CLAIM, ADD, MORE, REGISTER -> drawVanillaButton(row, matrices, cell, hover);
                 case PLAYER -> {
                     if (hover) {
-                        DrawableHelper.fill(matrices, cell.x - 1, cell.y, cell.x + cell.w + 1, cell.y + cell.h,
+                        dev.materialshare.McClientCompat.fill(matrices, cell.x - 1, cell.y, cell.x + cell.w + 1, cell.y + cell.h,
                                 0x66FFFFFF);
                     }
                     if (faces()) {
@@ -127,8 +126,8 @@ public final class RowOverlay {
                         // a small green dot on the corner of the face (or before the name when faces are off)
                         int dx = faces() ? cell.x + FACE - 3 : cell.x;
                         int dy = cell.y + (cell.h - FACE) / 2 + (faces() ? FACE - 3 : 2);
-                        DrawableHelper.fill(matrices, dx - 1, dy - 1, dx + 4, dy + 4, 0xFF000000);
-                        DrawableHelper.fill(matrices, dx, dy, dx + 3, dy + 3, 0xFF55FF55);
+                        dev.materialshare.McClientCompat.fill(matrices, dx - 1, dy - 1, dx + 4, dy + 4, 0xFF000000);
+                        dev.materialshare.McClientCompat.fill(matrices, dx, dy, dx + 3, dy + 3, 0xFF55FF55);
                     }
                     row.drawString(cell.x + faceW() + (faces() ? 0 : 5), cell.y + (cell.h - 8) / 2 + 1, cell.color, cell.text, matrices);
                 }
@@ -154,7 +153,7 @@ public final class RowOverlay {
             if (cell.contains(mx, my) && !cell.tooltip.isEmpty()) {
                 List<Text> lines = new ArrayList<>();
                 cell.tooltip.forEach(line -> lines.add(dev.materialshare.McCompat.literal(line)));
-                screen.renderOrderedTooltip(matrices, UiText.tipLines(lines), mx, my);
+                dev.materialshare.McClientCompat.tooltip(screen, matrices, UiText.tipLines(lines), mx, my);
                 return true;
             }
         }
@@ -307,7 +306,7 @@ public final class RowOverlay {
         if (client.player != null) {
             return client.player.getUuid();
         }
-        return client.getSession() == null ? null : client.getSession().getProfile().getId();
+        return client.getSession() == null ? null : dev.materialshare.McClientCompat.sessionUuid(client);
     }
 
     private static List<Cell> layout(WidgetBase row, MaterialListEntry entry, int x0) {
@@ -520,23 +519,17 @@ public final class RowOverlay {
     private static void drawVanillaButton(WidgetBase row, MatrixStack matrices, Cell cell, boolean hover) {
         int v = 46 + (hover ? 2 : 1) * 20;
         int half = cell.w / 2;
-        dev.materialshare.McClientCompat.useShaderPositionTex();
-        RenderSystem.setShaderTexture(0, ClickableWidget.WIDGETS_TEXTURE);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableBlend();
-        DrawableHelper.drawTexture(matrices, cell.x, cell.y, half, cell.h, 0.0F, (float) v, half, cell.h, 256, 256);
-        DrawableHelper.drawTexture(matrices, cell.x + half, cell.y, cell.w - half, cell.h, (float) (200 - (cell.w - half)), (float) v, cell.w - half, cell.h, 256, 256);
-        RenderSystem.disableBlend();
+        dev.materialshare.McClientCompat.vanillaButton(matrices, cell.x, cell.y, cell.w, cell.h, hover);
         int color = hover ? 0xFFFFFFA0 : 0xFFE0E0E0;
         row.drawCenteredStringWithShadow(cell.x + cell.w / 2, cell.y + (cell.h - 8) / 2, color, cell.text, matrices);
     }
 
     /** A thin bar under the total: grey track, blue while collecting, green when done. */
     private static void drawProgressBar(MatrixStack matrices, int x, int y, int width, double ratio, boolean done) {
-        DrawableHelper.fill(matrices, x, y, x + width, y + 2, 0xFF3A3A3A);
+        dev.materialshare.McClientCompat.fill(matrices, x, y, x + width, y + 2, 0xFF3A3A3A);
         int filled = (int) Math.round(width * Math.max(0.0, Math.min(1.0, ratio)));
         if (filled > 0) {
-            DrawableHelper.fill(matrices, x, y, x + filled, y + 2, done ? 0xFF55FF55 : 0xFF55AAFF);
+            dev.materialshare.McClientCompat.fill(matrices, x, y, x + filled, y + 2, done ? 0xFF55FF55 : 0xFF55AAFF);
         }
     }
 
@@ -545,7 +538,7 @@ public final class RowOverlay {
         PlayerListEntry entry = client.getNetworkHandler() == null ? null
                 : client.getNetworkHandler().getPlayerListEntry(id);
         if (entry != null) {
-            Identifier texture = entry.getSkinTexture();
+            Identifier texture = dev.materialshare.McClientCompat.entrySkin(entry);
             SEEN_SKINS.put(id, texture);
             return texture;
         }
@@ -554,17 +547,17 @@ public final class RowOverlay {
         if (fetched != null) {
             return fetched;
         }
-        return SEEN_SKINS.getOrDefault(id, DefaultSkinHelper.getTexture(id));
+        return SEEN_SKINS.getOrDefault(id, dev.materialshare.McClientCompat.defaultSkin(id));
     }
 
     /** The 8x8 face from the skin, plus the hat layer on top. */
     static void drawFace(MatrixStack matrices, UUID player, int x, int y) {
         dev.materialshare.McClientCompat.useShaderPositionTex();
-        RenderSystem.setShaderTexture(0, skinOf(player));
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
-        DrawableHelper.drawTexture(matrices, x, y, FACE, FACE, 8.0F, 8.0F, 8, 8, 64, 64);
-        DrawableHelper.drawTexture(matrices, x, y, FACE, FACE, 40.0F, 8.0F, 8, 8, 64, 64);
+        Identifier skin = skinOf(player);
+        dev.materialshare.McClientCompat.texture(matrices, skin, x, y, FACE, FACE, 8.0F, 8.0F, 8, 8, 64, 64);
+        dev.materialshare.McClientCompat.texture(matrices, skin, x, y, FACE, FACE, 40.0F, 8.0F, 8, 8, 64, 64);
         RenderSystem.disableBlend();
     }
 }

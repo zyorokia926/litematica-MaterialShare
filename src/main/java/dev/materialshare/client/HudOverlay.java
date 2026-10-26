@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -107,7 +106,7 @@ public final class HudOverlay {
     public static void render(MatrixStack matrices, float tickDelta) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!Configs.Generic.SHOW_HUD.getBooleanValue() || client.player == null || client.options.hudHidden
-                || client.currentScreen != null || client.options.debugEnabled) {
+                || client.currentScreen != null || dev.materialshare.McClientCompat.debugHud(client)) {
             return;
         }
         Layout l = layout(client);
@@ -119,11 +118,11 @@ public final class HudOverlay {
 
     static void draw(MatrixStack matrices, MinecraftClient client, Layout l, int x, int y) {
         TextRenderer font = client.textRenderer;
-        DrawableHelper.fill(matrices, x, y, x + l.width + PAD * 2, y + l.height + PAD * 2, 0x88000000);
-        font.drawWithShadow(matrices, l.title, x + PAD, y + PAD, 0xFFFFFFFF);
+        dev.materialshare.McClientCompat.fill(matrices, x, y, x + l.width + PAD * 2, y + l.height + PAD * 2, 0x88000000);
+        dev.materialshare.McClientCompat.text(font, matrices, l.title, x + PAD, y + PAD, 0xFFFFFFFF);
         int ly = y + PAD + 10;
         if (l.lines.isEmpty()) {
-            font.drawWithShadow(matrices, Lang.t("hud.nothing"), x + PAD, ly, 0xFF88FF88);
+            dev.materialshare.McClientCompat.text(font, matrices, Lang.t("hud.nothing"), x + PAD, ly, 0xFF88FF88);
             return;
         }
         for (Line line : l.lines) {
@@ -131,7 +130,7 @@ public final class HudOverlay {
             if (id != null && dev.materialshare.McCompat.hasItem(id)) {
                 dev.materialshare.McClientCompat.renderItemIcon(client, matrices, new ItemStack(dev.materialshare.McCompat.item(id)), x + PAD, ly);
             }
-            font.drawWithShadow(matrices, (line.priority ? "§6★§r " : "") + line.text, x + PAD + ICON + 2, ly + 4, 0xFFFFFFFF);
+            dev.materialshare.McClientCompat.text(font, matrices, (line.priority ? "§6★§r " : "") + line.text, x + PAD + ICON + 2, ly + 4, 0xFFFFFFFF);
             ly += ICON;
         }
     }

@@ -183,16 +183,8 @@ public final class StorageTracker {
         if (depth >= 3) {
             return;
         }
-        net.minecraft.nbt.NbtCompound tag = stack.getItem() instanceof net.minecraft.item.BundleItem ? stack.getNbt()
-                : net.minecraft.block.Block.getBlockFromItem(stack.getItem()) instanceof net.minecraft.block.ShulkerBoxBlock
-                        ? stack.getSubNbt("BlockEntityTag") : null;
-        if (tag == null) {
-            return;
-        }
         Map<String, Integer> target = inner != null ? inner : direct;
-        for (net.minecraft.nbt.NbtElement e : tag.getList("Items", net.minecraft.nbt.NbtElement.COMPOUND_TYPE)) {
-            count(ItemStack.fromNbt((net.minecraft.nbt.NbtCompound) e), target, inner, depth + 1);
-        }
+        dev.materialshare.McCompat.forEachInside(stack, inside -> count(inside, target, inner, depth + 1));
     }
 
     /** Credits what changed since the last look to the player, in every project whose box holds this chest. */

@@ -32,6 +32,7 @@ public final class ServerNet {
     }
 
     public static void register() {
+        dev.materialshare.McNet.init();
         ServerConfig.load();
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server -> ServerConfig.load());
         registerLoginCheck();
@@ -40,6 +41,7 @@ public final class ServerNet {
         registerStorage();
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            PENDING_SYNC.remove(handler.getPlayer());
             LAST_LOOKUP.remove(handler.getPlayer().getUuid());
             LAST_PLAYERS_REQUEST.remove(handler.getPlayer().getUuid());
             LAST_FEED.remove(handler.getPlayer().getUuid());
@@ -48,16 +50,24 @@ public final class ServerNet {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             MaterialShareState state = MaterialShareState.get(server);
             ServerPlayerEntity player = handler.getPlayer();
-            PlayerNames.forcePut(state.names(), player.getUuid(), player.getEntityName());
+            PlayerNames.forcePut(state.names(), player.getUuid(), player.getName().getString());
             state.markDirty();
             sendSnapshot(player, state);
             sendTrash(player, state);
             // the joining player may not be in the player list yet, so send to them directly as well
             sendNames(player, state);
             broadcastNames(server, state);
+            if (!dev.materialshare.McNet.canSend(player, Packets.SNAPSHOT)) {
+                PENDING_SYNC.add(player);
+            }
+        });
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (!PENDING_SYNC.isEmpty() && server.getTicks() % 5 == 0) {
+                syncPending(server);
+            }
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.CREATE, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.CREATE, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             int n = Math.min(buf.readVarInt(), Project.MAX_ITEMS);
             Map<String, Integer> required = new HashMap<>();
@@ -85,7 +95,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.DELETE, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.DELETE, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -101,7 +111,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.TRASH_RESTORE, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.TRASH_RESTORE, (server, player, handler, buf, responseSender) -> {
             long id = buf.readLong();
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -121,7 +131,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.TRASH_PURGE, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.TRASH_PURGE, (server, player, handler, buf, responseSender) -> {
             long id = buf.readLong();
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -132,7 +142,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_ITEM_INFO, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_ITEM_INFO, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             boolean priority = buf.readBoolean();
@@ -157,7 +167,7 @@ public final class ServerNet {
 
         registerShares();
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_ARCHIVED, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_ARCHIVED, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             boolean archived = buf.readBoolean();
             server.execute(() -> {
@@ -173,7 +183,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.CLAIM, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.CLAIM, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID target = buf.readUuid();
@@ -183,7 +193,7 @@ public final class ServerNet {
                     on ? History.Kind.CLAIM : History.Kind.UNCLAIM, 0));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_COLLECTED, (server, player, handler, buf, responseSender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_COLLECTED, (server, player, handler, buf, responseSender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID target = buf.readUuid();
@@ -192,17 +202,17 @@ public final class ServerNet {
                     project -> project.setCollected(target, itemId, n), History.Kind.COLLECTED, n));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.BULK_CLAIM, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.BULK_CLAIM, (server, player, handler, buf, sender) -> {
             Packets.Bulk bulk = Packets.readBulk(buf);
             server.execute(() -> bulkClaim(server, player, bulk));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.BULK_COLLECTED, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.BULK_COLLECTED, (server, player, handler, buf, sender) -> {
             Packets.Import imported = Packets.readImport(buf);
             server.execute(() -> bulkCollected(server, player, imported));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_NOTE, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_NOTE, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String note = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
@@ -219,7 +229,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_SURPLUS, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_SURPLUS, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             int n = buf.readVarInt();
@@ -236,7 +246,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.TAKE_SURPLUS, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.TAKE_SURPLUS, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID from = buf.readUuid();
@@ -254,7 +264,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.HISTORY_REQUEST, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.HISTORY_REQUEST, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             server.execute(() -> MaterialShareState.get(server).registry().get(name).ifPresent(project -> {
                 PacketByteBuf out = new PacketByteBuf(Unpooled.buffer());
@@ -271,7 +281,7 @@ public final class ServerNet {
 
     private static void registerPlayerSources() {
         // The player picker asks for everyone the server has seen before (its usercache).
-        ServerPlayNetworking.registerGlobalReceiver(Packets.REQUEST_PLAYERS,
+        dev.materialshare.McNet.receive(Packets.REQUEST_PLAYERS,
                 (server, player, handler, buf, responseSender) -> server.execute(() -> {
                     long now = System.currentTimeMillis();
                     Long last = LAST_PLAYERS_REQUEST.get(player.getUuid());
@@ -291,7 +301,7 @@ public final class ServerNet {
                 }));
 
         // A player who is not known yet can be found by exact name (asks the server's profile lookup).
-        ServerPlayNetworking.registerGlobalReceiver(Packets.LOOKUP_PLAYER,
+        dev.materialshare.McNet.receive(Packets.LOOKUP_PLAYER,
                 (server, player, handler, buf, responseSender) -> {
                     String name = buf.readString(Packets.MAX_STRING);
                     server.execute(() -> lookup(server, player, name));
@@ -337,7 +347,7 @@ public final class ServerNet {
                 return;
             }
         }
-        server.getUserCache().findByNameAsync(name, result -> server.execute(() -> {
+        dev.materialshare.McCompat.findProfile(server, name, result -> server.execute(() -> {
             boolean found = false;
             if (result.isPresent() && result.get().getId() != null) {
                 found = PlayerNames.put(state.names(), result.get().getId(), result.get().getName());
@@ -385,10 +395,32 @@ public final class ServerNet {
                 });
     }
 
+    /**
+     * Players whose client had not yet reported its channels when they joined (Fabric API 0.91.1 on Minecraft 1.20.3
+     * does that late): what the join sent was dropped, so it is sent again as soon as the channels are known.
+     */
+    private static final java.util.Set<ServerPlayerEntity> PENDING_SYNC = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    private static void syncPending(MinecraftServer server) {
+        PENDING_SYNC.removeIf(player -> {
+            if (player.isDisconnected()) {
+                return true;
+            }
+            if (!dev.materialshare.McNet.canSend(player, Packets.SNAPSHOT)) {
+                return false;
+            }
+            MaterialShareState state = MaterialShareState.get(server);
+            sendSnapshot(player, state);
+            sendTrash(player, state);
+            sendNames(player, state);
+            return true;
+        });
+    }
+
     /** Sends only to players whose client has this mod (a client without it is not sent packets it would not know). */
     private static void send(ServerPlayerEntity player, net.minecraft.util.Identifier channel, PacketByteBuf buf) {
-        if (ServerPlayNetworking.canSend(player, channel)) {
-            ServerPlayNetworking.send(player, channel, buf);
+        if (dev.materialshare.McNet.canSend(player, channel)) {
+            dev.materialshare.McNet.send(player, channel, buf);
         }
     }
 
@@ -514,7 +546,7 @@ public final class ServerNet {
     private static final Map<UUID, Long> LAST_ACTIVITY = new HashMap<>();
 
     private static void registerStorage() {
-        ServerPlayNetworking.registerGlobalReceiver(Packets.STORAGE_ADD, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.STORAGE_ADD, (server, player, handler, buf, sender) -> {
             Packets.AreaAdd add = Packets.readAreaAdd(buf);
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -530,7 +562,7 @@ public final class ServerNet {
                 });
             });
         });
-        ServerPlayNetworking.registerGlobalReceiver(Packets.STORAGE_REMOVE, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.STORAGE_REMOVE, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             int index = buf.readVarInt();
             server.execute(() -> {
@@ -545,7 +577,7 @@ public final class ServerNet {
                 });
             });
         });
-        ServerPlayNetworking.registerGlobalReceiver(Packets.ACTIVITY_REQUEST, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.ACTIVITY_REQUEST, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
                 long now = System.currentTimeMillis();
@@ -614,7 +646,7 @@ public final class ServerNet {
 
     /** Targets (promised amounts), handing claims over, delivery, items, names, copies, new required amounts, activity. */
     private static void registerShares() {
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_TARGETS, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_TARGETS, (server, player, handler, buf, sender) -> {
             Packets.Targets targets = Packets.readTargets(buf);
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -644,7 +676,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.TRANSFER, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.TRANSFER, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID from = buf.readUuid();
@@ -666,7 +698,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.SET_DELIVERED, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.SET_DELIVERED, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID target = buf.readUuid();
@@ -675,7 +707,7 @@ public final class ServerNet {
                     project -> project.setDelivered(target, itemId, n), History.Kind.DELIVERED, n));
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.BULK_DELIVERED, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.BULK_DELIVERED, (server, player, handler, buf, sender) -> {
             Packets.Import delivered = Packets.readImport(buf);
             server.execute(() -> {
                 MaterialShareState state = MaterialShareState.get(server);
@@ -703,7 +735,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.REMOVE_ITEM, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.REMOVE_ITEM, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
@@ -719,7 +751,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.RESET_CLAIMS, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.RESET_CLAIMS, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             UUID who = buf.readBoolean() ? buf.readUuid() : null;
@@ -754,7 +786,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.RESTORE_ITEM, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.RESTORE_ITEM, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             String itemId = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
@@ -770,7 +802,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.RENAME, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.RENAME, (server, player, handler, buf, sender) -> {
             String from = buf.readString(Packets.MAX_STRING);
             String to = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
@@ -789,7 +821,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.CLONE, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.CLONE, (server, player, handler, buf, sender) -> {
             String from = buf.readString(Packets.MAX_STRING);
             String to = buf.readString(Packets.MAX_STRING);
             boolean keepClaims = buf.readBoolean();
@@ -808,7 +840,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.UPDATE_REQUIRED, (server, player, handler, buf, sender) -> {
+        dev.materialshare.McNet.receive(Packets.UPDATE_REQUIRED, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             int n = Math.min(buf.readVarInt(), Project.MAX_ITEMS);
             Map<String, Integer> required = new HashMap<>();
@@ -828,7 +860,7 @@ public final class ServerNet {
             });
         });
 
-        ServerPlayNetworking.registerGlobalReceiver(Packets.FEED_REQUEST, (server, player, handler, buf, sender) ->
+        dev.materialshare.McNet.receive(Packets.FEED_REQUEST, (server, player, handler, buf, sender) ->
                 server.execute(() -> {
                     long now = System.currentTimeMillis();
                     Long last = LAST_FEED.get(player.getUuid());
