@@ -1,6 +1,11 @@
 #!/bin/bash
-# usage: test2.sh <mc version>  - one server, two clients (Cara operator, Bob), after ports/build.py made /tmp/materialshare-ports/<version>
-V=$1; G=gradle; case "$V" in 1.20.5|1.20.6) G=/opt/gradle9/gradle-9.2.0/bin/gradle;; esac; W=/tmp/materialshare-ports/$V; P=/home/user/port
+# usage: two-clients.sh <mc version> [port slot]
+# One server and two clients (Cara operator, Bob) on the work folder that ports/build.py made (/tmp/materialshare-ports/<version>).
+# The port slot (0, 1, ...) lets several versions run at the same time. Logs go to $MATERIALSHARE_LOGS (default /tmp/materialshare-test-logs).
+# Linux only (xvfb-run, /proc); needs Gradle 9.2 for 1.20.5 and later (GRADLE9, default /opt/gradle9/gradle-9.2.0/bin/gradle).
+V=$1; G=gradle; case "$V" in 1.20.5|1.20.6) G=${GRADLE9:-/opt/gradle9/gradle-9.2.0/bin/gradle};; esac; W=${PORT_WORK:-/tmp/materialshare-ports}/$V
+HERE=$(cd "$(dirname "$0")" && pwd); DATA=$HERE/data; PROBE=$HERE/TwoClientProbe.java.txt
+P=${MATERIALSHARE_LOGS:-/tmp/materialshare-test-logs}; mkdir -p "$P"
 PORT=$((25565 + ${2:-0}))
 # stops only the processes that run in this version's work folder (so several versions can be tested at the same time)
 killver() { for p in $(pgrep -f "java|Xvfb|xvfb-run|tail -f|timeout"); do
@@ -8,12 +13,15 @@ killver() { for p in $(pgrep -f "java|Xvfb|xvfb-run|tail -f|timeout"); do
 killver
 cd $W || exit 1
 rm -rf run run-c run-b; mkdir -p run
-cp $P/p192/run/eula.txt $P/p192/run/server.properties $P/p192/run/ops.json run/
+cp $DATA/server/eula.txt $DATA/server/server.properties $DATA/server/ops.json run/
 sed -i "s/level-name=.*/level-name=m$V$RANDOM/; s/spawn-protection=.*/spawn-protection=0/; s/^server-port=.*/server-port=$PORT/; s/^query.port=.*/query.port=$PORT/" run/server.properties
-for d in run-c run-b; do mkdir -p $d; cp -r $P/p192/run-c/config $P/p192/run-c/schematics $P/p192/run-c/options.txt $d/; done
-[ -n "$NOSYNC" ] || true
-for d in run-c run-b; do for f in $d/config/litematica/litematica_127.0.0.1_25565*.json; do cp $f ${f/25565/$PORT}; done; done
-cp $P/probe2/TmpProbe.java src/main/java/dev/materialshare/client/TmpProbe.java
+for d in run-c run-b; do mkdir -p $d; cp -r $DATA/client/config $DATA/client/schematics $DATA/client/options.txt $d/; done
+for d in run-c run-b; do
+  # the schematic placement of the test data points to the schematics folder of this run
+  sed -i "s|/home/user/matlisttracker/run-sodium/schematics|$W/$d/schematics|g" $d/config/litematica/*.json
+  for f in $d/config/litematica/litematica_127.0.0.1_25565*.json; do cp $f ${f/25565/$PORT}; done
+done
+cp $PROBE src/main/java/dev/materialshare/client/TmpProbe.java
 grep -q "TmpProbe.init" src/main/java/dev/materialshare/client/ClientNet.java || sed -i 's|^        register();|        register();\n        if (System.getProperty("matlist.check") != null) {\n            TmpProbe.init();\n        }|' src/main/java/dev/materialshare/client/ClientNet.java
 case "$V" in
   1.19.3|1.19.4) ;;
