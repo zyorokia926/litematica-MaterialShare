@@ -39,6 +39,11 @@ def pages():
     return [(m.group(1), re.findall(r'"(\w+)"', m.group(2))) for m in re.finditer(r'new Page\("(\w+)",\s*List\.of\(([^)]*)\)\)', block)]
 
 
+def quote(lines):
+    """a block quote around a folded section: GitHub draws a bar at its left in the light and in the dark theme, so the section is framed"""
+    return [("> " + line).rstrip() for line in lines]
+
+
 def body_lines(pid, text):
     out = []
     for line in text.split("\n"):
@@ -67,7 +72,7 @@ def section(lang, problems):
         title, short, body = d[key + ".title"], d.get(key + ".short", ""), d[key + ".body"]
         anchor = f"f-{lang}-{pid}"
         rows.append(f"| {title} | {short} | [↓](#{anchor}) |")
-        part = [f'<a id="{anchor}"></a>', "", f"### {title}", "", "<details>", f"<summary><b>{short or title}</b></summary>", ""]
+        part = ["<details>", f"<summary><b>{short or title}</b></summary>", ""]
         for name in images:
             if not (RES / "textures/gui/help" / lang / f"{name}.png").exists():
                 problems.append(f"{lang}: picture {name}.png of page {pid} is missing")
@@ -76,14 +81,14 @@ def section(lang, problems):
         part += ["", *body_lines(pid, body), ""]
         note = VERSION_NOTES.get(pid, {}).get(lang)
         if note:
-            part += ["> [!NOTE]", f"> **{t['note']}**: {note}", ""]
-        part += ["</details>", ""]
-        parts.append("\n".join(part))
+            part += [f"⚠️ **{t['note']}**: {note}", ""]
+        part += ["</details>"]
+        parts.append("\n".join([f'<a id="{anchor}"></a>', "", f"### {title}", "", *quote(part), ""]))
     settings = [f"| {d[k]} | {d.get(k.replace('config.name.', 'config.comment.'), '')} |" for k in d if "config.name." in k]
     out = [f"## {t['features']}", "", f"| {t['cols'][0]} | {t['cols'][1]} | {t['cols'][2]} |", "|---|---|---|", *rows, "",
            f"## {t['details']}", "", t["press"], "", *parts,
-           f"### {t['more']}", "", "<details>", f"<summary><b>{t['more']}</b></summary>", "",
-           f"| {t['setcols'][0]} | {t['setcols'][1]} |", "|---|---|", *settings, "", "</details>", ""]
+           f"### {t['more']}", "", *quote(["<details>", f"<summary><b>{t['more']}</b></summary>", "",
+           f"| {t['setcols'][0]} | {t['setcols'][1]} |", "|---|---|", *settings, "", "</details>"]), ""]
     return "\n".join(out), len(rows)
 
 
