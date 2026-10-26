@@ -39,7 +39,7 @@ Fabric API) exists for the version and that the Litematica build asks for the ma
 - Every text the code uses must exist in both language files (`LangFilesTest`).
 - Buttons must never overlap or overflow at any GUI scale (check new screens at several window sizes).
 - Do not start implementing a feature the owner has only discussed; wait for their go-ahead.
-- On GitHub (README, the docs pushed there, issues and comments) write "ver" instead of "版" for a version, in Japanese. The mod text, the Modrinth descriptions and the other files keep "版". "日本語版/英語版" stays as it is.
+- In every Japanese text (README, the docs pushed to GitHub, issues and comments, the mod text, the Modrinth descriptions and the other files) write "ver" instead of "版" for a version. "日本語版/英語版" stays as it is.
 - Test only the versions the owner names (for example only 1.20 to 1.20.6 when those were asked for). Say which versions were not tested again after a change of the shared code. Run long jobs once in the background and wait for them; do not poll in a loop (it wastes the session).
 - The source is shared by all versions; only `src/compat/<version>/` differs. Splitting it per version family (1.19 line / 1.20 line) was discussed and not decided; do not do it without the owner's go-ahead.
 
@@ -93,8 +93,8 @@ ver固有のゲームのクラス(`Text.literal`、Fabric のクライアント�
 - コードが使う文言は、2つの言語ファイルの両方に必要です(`LangFilesTest`)。
 - ボタンは、どのGUIの大きさでも、重ならない、はみ出さないようにします(新しい画面は、複数のウィンドウの大きさで確認します)。
 - オーナーが話し合っただけの機能は、実装を始めません。オーナーの「始めてください」を待ちます。
-- GitHub(README、GitHub に送る文書、Issue、コメント)の日本語では、バージョンを「版」ではなく「ver」と書きます。
-  MODの中の文言、Modrinth の説明文、そのほかのファイルは「版」のままです。「日本語版/英語版」はそのままです。
+- 日本語の文では(README、GitHub に送る文書、Issue、コメント、MODの中の文言、Modrinth の説明文、そのほかのファイル、すべて)、バージョンを「版」ではなく「ver」と書きます。
+  「日本語版/英語版」はそのままです。
 - テストは、オーナーが指定したverだけにします(たとえば 1.20〜1.20.6 を頼まれたら、その範囲だけ)。共通のコードを変えたあと、
   再テストしていないverがあれば、そう伝えます。長い作業は、裏で1回だけ実行して待ちます。ループで何度も確認しない(セッションの無駄になります)。
 - ソースは全verで共通で、違うのは `src/compat/<ver>/` だけです。verの系統(1.19系 / 1.20系)ごとにソースを分ける案は、

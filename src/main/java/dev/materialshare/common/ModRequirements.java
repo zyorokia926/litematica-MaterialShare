@@ -28,7 +28,7 @@ public final class ModRequirements {
         List<String> problems = new ArrayList<>();
         for (Requirement r : CLIENT) {
             boolean anyVersion = r.min == null || r.maxExclusive == null;
-            String range = anyVersion ? "どの版でも / any version"
+            String range = anyVersion ? "どのverでも / any version"
                     : r.min + " 以上 " + r.maxExclusive + " 未満 / " + r.min + " or newer, older than " + r.maxExclusive;
             String version = installedVersion.apply(r.modId);
             if (version == null) {

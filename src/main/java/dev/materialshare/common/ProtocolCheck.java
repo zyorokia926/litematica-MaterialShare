@@ -19,9 +19,9 @@ public final class ProtocolCheck {
         if (server == client) {
             return Optional.empty();
         }
-        String clientText = client == UNKNOWN ? "古い版 / an older version" : String.valueOf(client);
-        return Optional.of("Litematica MaterialShare の版が、サーバーと合っていません(サーバー: " + server + " / あなた: " + clientText
-                + ")。サーバーと同じ版の jar を入れてください。 / Litematica MaterialShare does not match the server (server: "
+        String clientText = client == UNKNOWN ? "古いver / an older version" : String.valueOf(client);
+        return Optional.of("Litematica MaterialShare のverが、サーバーと合っていません(サーバー: " + server + " / あなた: " + clientText
+                + ")。サーバーと同じverの jar を入れてください。 / Litematica MaterialShare does not match the server (server: "
                 + server + ", you: " + clientText + "). Install the same version as the server.");
     }
 }
