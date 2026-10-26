@@ -52,6 +52,9 @@ GWL_EXSTYLE, WS_EX_NOACTIVATE = -20, 0x08000000
 user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
 user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
 user32.IsWindow.argtypes = [wintypes.HWND]
+user32.IsIconic.argtypes = [wintypes.HWND]
+user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+user32.SwitchToThisWindow.argtypes = [wintypes.HWND, wintypes.BOOL]
 
 
 def secondary_monitor():
@@ -98,6 +101,8 @@ class Windows:
         self.abort = ""  # the reason why everything must stop (checked by the test loops)
         self.hold = 0  # how many checks in a row a game window had the focus
         self.t0 = time.time()
+        self.others = []  # the last windows that had the focus and are not ours (newest last): where the focus goes back to
+        self.events = []  # what happened to the focus (the first few events), for the report
         self.stolen = 0  # how many checks (every 0.03 s) a game window had the focus
         threading.Thread(target=self.loop, daemon=True).start()
 
@@ -150,8 +155,10 @@ class Windows:
         fpid = wintypes.DWORD()
         user32.GetWindowThreadProcessId(fg, ctypes.byref(fpid))
         ours = fpid.value in pids
-        if fg and not ours:
-            self.last_other = fg
+        if fg and not ours and self.good(fg):
+            if fg in self.others:
+                self.others.remove(fg)
+            self.others = (self.others + [fg])[-5:]
         mx, my, mw, mh = self.mon
 
         def cb(hwnd, _):
@@ -175,20 +182,53 @@ class Windows:
         self.hold = self.hold + 1 if fpid.value in pids else 0
         if self.hold > 66 and not self.abort:  # 2 seconds in a row
             self.abort = "a game window kept the focus for 2 seconds"
-        if fpid.value in pids and self.last_other and user32.IsWindow(self.last_other):
+        if fpid.value in pids and self.others:
             self.stolen += 1
-            self.give_back(self.last_other)
+            if len(self.events) < 8 and (not self.events or self.hold == 1):
+                self.events.append(f"{time.time() - self.t0:.1f} s: a game window had the focus ({self.describe(fg)})")
+            ok = self.give_back(pids)
+            if not ok and len(self.events) < 8 and self.hold in (1, 30, 60):
+                self.events.append(f"{time.time() - self.t0:.1f} s: could not give the focus back (tried {len(self.others)} windows)")
 
-    def give_back(self, target):
-        # no fake key presses: attach to the input queue of the window that has the focus, then set the focus back
-        fg = user32.GetForegroundWindow()
-        t_fg = user32.GetWindowThreadProcessId(fg, None)
-        t_me = ctypes.windll.kernel32.GetCurrentThreadId()
-        user32.AttachThreadInput(t_me, t_fg, True)
-        ok = user32.SetForegroundWindow(target)
-        user32.AttachThreadInput(t_me, t_fg, False)
-        if not ok:
-            user32.SwitchToThisWindow(target, True)
+    @staticmethod
+    def title(hwnd):
+        buf = ctypes.create_unicode_buffer(120)
+        user32.GetWindowTextW(hwnd, buf, 120)
+        return buf.value
+
+    @staticmethod
+    def cls(hwnd):
+        buf = ctypes.create_unicode_buffer(64)
+        user32.GetClassNameW(hwnd, buf, 64)
+        return buf.value
+
+    def describe(self, hwnd):
+        return f"{self.cls(hwnd)} / {self.title(hwnd)[:40]}"
+
+    def good(self, hwnd):
+        """a window the focus can go back to: visible, not minimised, with a title, and not the desktop or the taskbar"""
+        return bool(user32.IsWindowVisible(hwnd) and not user32.IsIconic(hwnd) and self.title(hwnd)
+                    and self.cls(hwnd) not in ("Shell_TrayWnd", "Progman", "WorkerW", "Shell_SecondaryTrayWnd"))
+
+    def give_back(self, pids):
+        """no fake key presses: attach to the input queue of the window that has the focus, then set the focus back; the newest
+        window that works wins"""
+        for target in reversed(self.others):
+            if not user32.IsWindow(target) or not self.good(target):
+                continue
+            fg = user32.GetForegroundWindow()
+            t_fg = user32.GetWindowThreadProcessId(fg, None)
+            t_me = ctypes.windll.kernel32.GetCurrentThreadId()
+            user32.AttachThreadInput(t_me, t_fg, True)
+            ok = user32.SetForegroundWindow(target)
+            user32.AttachThreadInput(t_me, t_fg, False)
+            if not ok:
+                user32.SwitchToThisWindow(target, True)
+            fpid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(user32.GetForegroundWindow(), ctypes.byref(fpid))
+            if fpid.value not in pids:
+                return True
+        return False
 
 
 def gradle_cmd(ver):
@@ -401,6 +441,8 @@ def main():
             summary += list(ex.map(one, group))
     windows.stop = True
     summary.append(f"memory of the PC: highest use {windows.mem_peak:.0f} %, least free {windows.free_min:.1f} GB")
+    if windows.events:
+        summary.append("focus events:\n  " + "\n  ".join(windows.events))
     summary.append(f"time a game window had the focus: {windows.stolen * 0.03:.1f} s")
     if windows.errors:
         summary.append("window notes: " + "; ".join(sorted(set(windows.errors))[:5]))
