@@ -27,6 +27,7 @@ public final class TmpProbe {
     static final boolean CARA = "Cara".equals(System.getProperty("matlist.role"));
     static final String ME = CARA ? "Cara" : "Bob";
     static int tick, step, wait, since;
+    static final String PORT = System.getProperty("matlist.port", "25565");
     static boolean connecting;
     static int tried;
     static MaterialListBase list;
@@ -81,7 +82,7 @@ public final class TmpProbe {
                         && (c.currentScreen instanceof TitleScreen || c.currentScreen.getClass().getSimpleName().contains("Disconnected"))) {
                     connecting = true;
                     tried = tick; // the server may still be starting: try again from the title / disconnected screen
-                    ConnectScreen.connect(c.currentScreen, c, ServerAddress.parse("127.0.0.1:25565"), new ServerInfo("t", "127.0.0.1:25565", false));
+                    ConnectScreen.connect(c.currentScreen, c, ServerAddress.parse("127.0.0.1:" + PORT), new ServerInfo("t", "127.0.0.1:" + PORT, false));
                 }
                 return;
             }
