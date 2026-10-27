@@ -397,6 +397,8 @@ def prepare(ver, slot):
     props = read(sp)
     props = re.sub(r"level-name=.*", f"level-name=m{ver}{int(time.time()) % 100000}", props)
     props = re.sub(r"spawn-protection=.*", "spawn-protection=0", props)
+    if ver.startswith("1.18"):  # 1.18.x does not read "minecraft:flat": the world became natural terrain (hills, cliffs), and a player could fall away from the chest
+        props = re.sub(r"(?m)^level-type=.*", "level-type=flat", props)
     props = re.sub(r"(?m)^server-port=.*", f"server-port={port}", props)
     props = re.sub(r"(?m)^query.port=.*", f"query.port={port}", props)
     sp.write_text(props, encoding="utf-8", newline="\n")
