@@ -77,7 +77,8 @@ def snapshot():
         eta_ms = int(time.mktime((t.tm_year, t.tm_mon, t.tm_mday, h, mi, s, 0, 0, -1)) * 1000)
     return {"rows": rows, "done": done, "total": len(rows), "finished": finished, "eta": eta_ms,
             "start": int(path.stat().st_ctime * 1000) if path.exists() else 0,
-            "mem": info["mem"], "batch": info["batch"], "log": log[-400:], "now": int(time.time() * 1000)}
+            "mem": info["mem"], "batch": info["batch"], "log": log[-400:], "now": int(time.time() * 1000),
+            "stop": (LOGS / "STOP").exists()}
 
 
 PAGE = r"""<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -106,10 +107,11 @@ h1{margin:0;font-size:26px;font-weight:650;letter-spacing:-.01em;font-variant-nu
 .logh label{color:var(--mut);font-size:12.5px;display:flex;align-items:center;gap:6px}button{font:inherit;font-size:12.5px;padding:3px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
 #log{background:var(--logbg);color:var(--logfg);border-radius:12px;padding:10px 12px;height:340px;overflow:auto;font:12.5px/1.55 ui-monospace,Consolas,monospace}
 #log div{white-space:pre-wrap;word-break:break-word}#log .t{color:#6b7385;margin-right:8px}#log .v{display:inline-block;min-width:54px;margin-right:8px;font-weight:600}#log .quiet{opacity:.55}#log .bad{color:#ff8b8b}#log .good{color:#7ee2a0}
+button.stop{border-color:var(--ng);color:var(--ng);font-weight:600;padding:5px 14px}button.stop:hover:not(:disabled){background:var(--ng);color:#fff}button.stop:disabled{opacity:.55;cursor:default}button.stop.hide{display:none}
 #warn{display:none;margin-top:12px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--ng) 14%,var(--card));color:var(--ng);font-size:13px}
 @media(max-width:520px){h1{font-size:21px}.grid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><main>
-<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span class="chip" id="cnt"></span></div>
+<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span style="display:flex;gap:10px;align-items:center"><span class="chip" id="cnt"></span><button id="stop" class="stop" title="全部のテストを止めます(ゲームの窓も閉じます)">■ テストを停止</button></span></div>
 <div class="total"><i id="tot"></i></div>
 <div class="chips"><span class="chip">経過 <b id="el">-</b></span><span class="chip">空きメモリ <b id="mem">-</b></span><span class="chip" id="batch">-</span><span class="chip">最終更新 <b id="upd">-</b></span></div></section>
 <div id="warn">更新用のプログラム(progress_view.py)が止まっています。表示は最後の状態です。</div>
@@ -134,6 +136,7 @@ function draw(){var g=document.getElementById('grid'),html='';
   html+='<div class="card '+cls+(sel===r.ver?' sel':'')+'" data-v="'+r.ver+'"><h3>'+r.ver+'<span class="badge">'+lab+'</span></h3><div class="bar"><i style="width:'+r.pct+'%"></i></div><div class="dots">'+dots+'</div><small>'+esc(r.text||'')+'</small></div>'});
  g.innerHTML=html;
  var sum=0;D.rows.forEach(function(r){sum+=r.pct});document.getElementById('tot').style.width=(D.total?sum/D.total:0)+'%';
+ var sb=document.getElementById('stop');sb.classList.toggle('hide',D.finished);sb.disabled=D.stop;sb.textContent=D.stop?'停止中...':'■ テストを停止';
  document.getElementById('cnt').innerHTML='<b>'+D.done+'</b> / '+D.total+' ver 完了';
  document.getElementById('mem').textContent=D.mem?D.mem+' GB':'-';document.getElementById('batch').textContent=D.batch||'-'}
 function esc(s){return s.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
@@ -149,6 +152,10 @@ async function poll(){try{var r=await fetch(BASE+'/data.json',{cache:'no-store'}
  catch(e){document.getElementById('warn').style.display='block'}}
 document.getElementById('grid').addEventListener('click',function(e){var c=e.target.closest('.card');if(!c)return;sel=sel===c.dataset.v?'':c.dataset.v;if(D){draw();drawLog()}});
 document.getElementById('all').onclick=function(){sel='';if(D){draw();drawLog()}};document.getElementById('quiet').onchange=function(){if(D)drawLog()};
+document.getElementById('stop').onclick=async function(){
+ if(!confirm('全部のテストを止めますか？\n動いているゲームの窓も閉じます(結果は「不合格」ではなく「中止」になります)。'))return;
+ this.disabled=true;this.textContent='停止を指示しました...';
+ try{var r=await fetch(BASE+'/stop',{method:'POST',headers:{'X-Stop':'1'}});if(!r.ok)throw 0}catch(e){alert('停止の指示が送れませんでした。\n手動で止めるときは、次のファイルを作ってください:\nSTOP(テストのログのフォルダの中)');this.disabled=false;this.textContent='■ テストを停止'}};
 poll();setInterval(poll,1000);setInterval(clock,250);
 </script></body></html>""".replace("__PORT__", str(PORT))
 
@@ -169,6 +176,28 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
+
+    def _origin_ok(self):
+        # only this page may press the button (a web page of another site must not stop the test)
+        origin = self.headers.get("Origin")
+        return origin in (None, "null", f"http://localhost:{PORT}", f"http://127.0.0.1:{PORT}")
+
+    def do_OPTIONS(self):
+        self.send_response(204 if self._origin_ok() else 403)
+        self.send_header("Access-Control-Allow-Origin", self.headers.get("Origin") or "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST")
+        self.send_header("Access-Control-Allow-Headers", "X-Stop")
+        self.end_headers()
+
+    def do_POST(self):
+        if self.path != "/stop" or self.headers.get("X-Stop") != "1" or not self._origin_ok():
+            self.send_error(403)
+            return
+        (LOGS / "STOP").write_text("stopped from the progress page\n", encoding="utf-8")  # two-clients.py watches this file
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", self.headers.get("Origin") or "*")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def log_message(self, *args):
         pass
