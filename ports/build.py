@@ -29,6 +29,8 @@ VERSIONS = {
     "1.19.1": dict(yarn="1.19.1+build.6", fabric_api="0.58.5+1.19.1", litematica="0.12.3", malilib="0.13.0", modmenu="4.0.5"),
     "1.19.2": dict(yarn="1.19.2+build.28", fabric_api="0.77.0+1.19.2", litematica="0.12.7", malilib="0.13.0", modmenu="4.1.2"),
     "1.19.3": dict(yarn="1.19.3+build.5", fabric_api="0.76.1+1.19.3", litematica="0.13.2", malilib="0.14.0", modmenu="5.1.0"),
+    # the main build; here only to make a work folder for the two-client test (the jar of the main build comes from `gradle build`)
+    "1.19.4": dict(yarn="1.19.4+build.2", fabric_api="0.87.2+1.19.4", litematica="0.14.7", malilib="0.15.4", modmenu="6.3.1"),
     "1.20.1": dict(yarn="1.20.1+build.10", fabric_api="0.92.2+1.20.1", litematica="0.15.4", malilib="0.16.3", modmenu="7.2.2",
                    syncmatica=("1.20.1", "1.20.1-0.3.11"), loader="0.15.6", api_min="0.92.2"),
     "1.20.2": dict(yarn="1.20.2+build.4", fabric_api="0.91.6+1.20.2", litematica="0.16.1", malilib="0.17.0", modmenu="8.0.1",

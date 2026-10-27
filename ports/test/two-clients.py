@@ -44,10 +44,11 @@ T_START = time.time()
 ALL_PROCS = []  # every process this script started (the last safety net kills them)
 STOP_FILE = LOGS / "STOP"  # create this file and all tests stop at once
 TIME_LIMIT = 20 * 60  # seconds for the whole run
+MAX_USED_GB = float(os.environ.get("MATERIALSHARE_MAX_MEM_GB", "59"))  # everything stops when the whole PC uses more memory than this
 TILE_W, TILE_H, TILE_ROWS = 640, 360, 2  # set by set_layout()
 # the options that make a test client light: small world, few frames (the probe works on ticks)
 FAST_OPTIONS = {"maxFps": "60", "enableVsync": "false", "renderDistance": "2", "simulationDistance": "5", "graphicsMode": "0",
-                "particles": "2", "entityShadows": "false", "ao": "false", "biomeBlendRadius": "0", "soundCategory_music": "0.0"}
+                "particles": "2", "entityShadows": "false", "ao": "false", "biomeBlendRadius": "0", "soundCategory_master": "0.0", "soundCategory_music": "0.0"}  # master = no sound at all from the hidden games
 
 user32 = ctypes.windll.user32
 user32.GetForegroundWindow.restype = wintypes.HWND
@@ -154,7 +155,9 @@ class Windows:
         m = psutil.virtual_memory()
         self.mem_peak = max(self.mem_peak, m.percent)
         self.free_min = min(self.free_min, m.available / 2**30)
-        if m.available < 3 * 2**30:
+        if (m.total - m.available) > MAX_USED_GB * 2**30:
+            self.abort = f"the PC uses more than {MAX_USED_GB:g} GB of memory"
+        elif m.available < 3 * 2**30:
             self.abort = "less than 3 GB of free memory"
         elif psutil.cpu_percent(None) > 99.5 and m.percent > 90:
             self.abort = "the PC is overloaded"
