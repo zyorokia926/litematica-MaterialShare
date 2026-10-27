@@ -20,6 +20,10 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from memory_guard import run_guarded  # noqa: E402
+from pathlib import Path
+
 ROOT = Path(__file__).resolve().parent.parent
 VERSIONS = {
     "1.18": dict(yarn="1.18+build.1", fabric_api="0.44.0+1.18", litematica="0.9.1", malilib="0.10.0-dev.26", modmenu="3.0.1"),
@@ -129,7 +133,7 @@ def main():
         env["JAVA_HOME"] = jdk
     if os.name == "nt" and not gradle_cmd.lower().endswith((".bat", ".cmd")):
         gradle_cmd += ".bat"
-    subprocess.run([gradle_cmd, "build", "-x", "test", "--no-daemon", "-q"], cwd=work, check=True, env=env)
+    run_guarded([gradle_cmd, "build", "-x", "test", "--no-daemon", "-q"], cwd=work, env=env)  # stops when less than 3 GB of RAM is free
     jar = next((work / "build" / "libs").glob("*.jar"))
     (ROOT / "dist").mkdir(exist_ok=True)
     shutil.copy(jar, ROOT / "dist" / jar.name)
