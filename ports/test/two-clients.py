@@ -16,6 +16,7 @@ import ctypes
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -533,6 +534,25 @@ def run_version(ver, slot, windows, desktop):
             kill_tree(p)
 
 
+def start_progress_page():
+    """every test run can be watched at http://localhost:8765/ (progress_view.py, kept running after the test; started only once)"""
+    port = int(os.environ.get("MATERIALSHARE_PORT", "8765"))
+    url = f"http://localhost:{port}/"
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=1):
+            return url  # already running (it reads the same progress.txt)
+    except OSError:
+        pass
+    env = dict(os.environ, MATERIALSHARE_LOGS=str(LOGS))
+    flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+    try:
+        subprocess.Popen([sys.executable, "-I", str(HERE / "progress_view.py")], env=env, creationflags=flags,
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
+    except OSError as e:
+        return f"(the progress page did not start: {e})"
+    return url
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("versions", nargs="+")
@@ -545,6 +565,7 @@ def main():
     kill_leftovers()
     desktop = hidden_desktop.create_desktop(DESKTOP_NAME)
     say(f"the second desktop '{DESKTOP_NAME}' is ready: the games run there, not on your screen")
+    say(f"progress page: {start_progress_page()}  (a copy: {LOGS / 'progress.html'})")
     say(f"versions: {', '.join(a.versions)}; {a.jobs} at a time; progress is also written to {PROGRESS_FILE}; stop everything with {STOP_FILE}")
     set_layout(2 * min(a.jobs, len(a.versions)))
     windows = Windows()
