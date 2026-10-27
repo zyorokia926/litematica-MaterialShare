@@ -566,7 +566,8 @@ def main():
         say(f"batch {n + 1} of {len(groups)}: {', '.join(names)} (expected {seconds_for(len(names))} s for this batch)")
         with ThreadPoolExecutor(max_workers=a.jobs) as ex:
             summary += list(ex.map(one, list(enumerate(names))))
-        remember_seconds(len(names), time.time() - t0)
+        if not windows.abort:  # a stopped batch is short; it must not make the next expected end too early
+            remember_seconds(len(names), time.time() - t0)
     windows.stop = True
     kill_all()
     hidden_desktop.close_desktop(desktop)
