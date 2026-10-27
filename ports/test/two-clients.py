@@ -2,7 +2,7 @@
 """Windows version of two-clients.sh: one server and two clients (Cara operator, Bob) on the work folder that ports/build.py made.
 
     py ports\\test\\two-clients.py 1.20.4                 one version
-    py ports\\test\\two-clients.py 1.20.1 1.20.2 --jobs 3  several versions, JOBS at the same time (default 3 = 6 windows; own ports)
+    py ports\\test\\two-clients.py 1.20.1 1.20.2 --jobs 3  several versions, JOBS at the same time (default 5 = 10 small windows; own ports)
 
 The game windows really open. They are put on the secondary monitor in a grid, behind everything else, without taking the
 keyboard focus (and the focus is given back to the window that had it). Needs psutil (py -m pip install psutil).
@@ -11,6 +11,7 @@ JAVA21_HOME (the JDK that runs Gradle). A pass is "ok-lines: 3 last-lines: 2" an
 """
 import argparse
 import atexit
+import json
 import ctypes
 import os
 import re
@@ -26,11 +27,20 @@ from pathlib import Path
 
 import psutil
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import hidden_desktop  # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 PROBE = HERE / "TwoClientProbe.java.txt"
 WORK = Path(os.environ.get("PORT_WORK", Path(tempfile.gettempdir()) / "materialshare-ports"))
 LOGS = Path(os.environ.get("MATERIALSHARE_LOGS", Path(tempfile.gettempdir()) / "materialshare-test-logs"))
+DESKTOP_NAME = "MaterialShareTest"  # the games run on this second desktop, so they can never take the keyboard or the mouse of the PC
+PROGRESS_FILE = LOGS / "progress.txt"
+TIMING_FILE = LOGS / "timing.json"  # how long a batch took (key: how many versions at the same time), for the end time shown
+DEFAULT_SECONDS = {1: 95, 2: 115, 3: 140, 4: 190}
+ETA_END = [0.0]  # the expected end of the whole run (time.time()); 0 = not known yet
+T_START = time.time()
 ALL_PROCS = []  # every process this script started (the last safety net kills them)
 STOP_FILE = LOGS / "STOP"  # create this file and all tests stop at once
 TIME_LIMIT = 20 * 60  # seconds for the whole run
@@ -83,7 +93,8 @@ def set_layout(windows_count):
     _, _, mw, mh = secondary_monitor()
     TILE_ROWS = 2 if windows_count <= 8 else 3 if windows_count <= 15 else 4
     cols = -(-windows_count // TILE_ROWS)
-    TILE_W, TILE_H = mw // cols, mh // TILE_ROWS
+    # never wider than a window of the 6-window grid (3 columns): with fewer windows they sit at the left edge, side by side
+    TILE_W, TILE_H = mw // max(3, cols), mh // TILE_ROWS
 
 
 class Windows:
@@ -99,6 +110,7 @@ class Windows:
         self.mem_peak = 0  # highest memory use of the whole PC (percent) and the lowest free memory (GB)
         self.free_min = 1e9
         self.abort = ""  # the reason why everything must stop (checked by the test loops)
+        self.clipped = 0  # how many times a game clipped the mouse
         self.hold = 0  # how many checks in a row a game window had the focus
         self.t0 = time.time()
         self.others = []  # the last windows that had the focus and are not ours (newest last): where the focus goes back to
@@ -134,6 +146,9 @@ class Windows:
         if (r.right - r.left) < user32.GetSystemMetrics(78) or (r.bottom - r.top) < user32.GetSystemMetrics(79):
             user32.ClipCursor(None)
             self.errors.append("mouse was clipped, released")
+            self.clipped += 1
+            if self.clipped > 3 and not self.abort:  # a game keeps clipping the mouse: stop everything
+                self.abort = "a game kept clipping the mouse"
 
     def step(self):
         m = psutil.virtual_memory()
@@ -251,6 +266,48 @@ def kill_tree(proc):
         subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
 
 
+def seconds_for(n):
+    """the expected seconds of a batch of n versions: the last measured one, else the default"""
+    try:
+        data = json.loads(TIMING_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    return int(data.get(str(n), DEFAULT_SECONDS.get(n, 60 + 40 * n)))
+
+
+def remember_seconds(n, seconds):
+    try:
+        data = json.loads(TIMING_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    old = data.get(str(n))
+    data[str(n)] = int(seconds if old is None else (old + seconds) / 2)
+    TIMING_FILE.write_text(json.dumps(data), encoding="utf-8")
+
+
+def eta_text():
+    """when the run is expected to end: the clock time and the time left (in Japanese and English)"""
+    if not ETA_END[0]:
+        return ""
+    left = int(ETA_END[0] - time.time())
+    clock = time.strftime("%H:%M:%S", time.localtime(ETA_END[0]))
+    if left <= 0:
+        return " | 終了予定を過ぎています(もう少しお待ちください) / past the expected end"
+    return f" | 終了予定 {clock}(あと {left // 60}分{left % 60:02d}秒) / ends about {clock} (in {left // 60} min {left % 60:02d} s)"
+
+
+def say(text):
+    """one line of progress with the time since the start and the expected end: on the screen and in the file progress.txt"""
+    secs = int(time.time() - T_START)
+    line = f"[{secs // 60:02d}:{secs % 60:02d}] {text}{eta_text()}"
+    print(line, flush=True)
+    try:
+        with open(PROGRESS_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except OSError:
+        pass
+
+
 def kill_all():
     """last safety net: stop every process we started, let the mouse go, nothing stays running"""
     for p in ALL_PROCS:
@@ -299,6 +356,30 @@ def patch_probe(ver, text):
     return text
 
 
+NO_LOCK_MIXIN = """package dev.materialshare.client.mixin;
+
+import net.minecraft.client.Mouse;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+/** TEMPORARY test helper, never committed: the test games never grab (hide, clip) the mouse of the PC. */
+@Mixin(Mouse.class)
+public abstract class TmpNoCursorLockMixin {
+    private static int tmpBlocked;
+
+    @Inject(method = "lockCursor", at = @At("HEAD"), cancellable = true)
+    private void tmpNoLock(CallbackInfo ci) {
+        if (tmpBlocked++ == 0) {
+            System.out.println("TMPLOCK the mouse lock is blocked");
+        }
+        ci.cancel();
+    }
+}
+"""
+
+
 def prepare(ver, slot):
     w = WORK / ver
     if not w.is_dir():
@@ -335,6 +416,14 @@ def prepare(ver, slot):
                 shutil.copy(f, f.with_name(f.name.replace("25565", str(port))))
     tmp = w / "src" / "main" / "java" / "dev" / "materialshare" / "client" / "TmpProbe.java"
     tmp.write_text(patch_probe(ver, read(PROBE)), encoding="utf-8", newline="\n")
+    # the games never grab the mouse of the PC: the mouse lock of the game is cancelled where it starts
+    mix = tmp.parent / "mixin" / "TmpNoCursorLockMixin.java"
+    mix.parent.mkdir(exist_ok=True)
+    mix.write_text(NO_LOCK_MIXIN, encoding="utf-8", newline="\n")
+    cfg = w / "src" / "main" / "resources" / "litematica_materialshare.client.mixins.json"
+    text = read(cfg)
+    if "TmpNoCursorLockMixin" not in text:
+        cfg.write_text(text.replace('"client": [', '"client": ["TmpNoCursorLockMixin",', 1), encoding="utf-8", newline="\n")
     net = tmp.with_name("ClientNet.java")
     text = net.read_bytes().decode("utf-8")
     if "TmpProbe.init" not in text:
@@ -348,42 +437,65 @@ def prepare(ver, slot):
     return w, port
 
 
-def run_version(ver, slot, windows):
+def run_version(ver, slot, windows, desktop):
     P = LOGS
     P.mkdir(parents=True, exist_ok=True)
+    say(f"{ver}: preparing the work folder")
     w, port = prepare(ver, slot)
     g, env = gradle_cmd(ver), base_env()
+    say(f"{ver}: compiling (gradle classes)")
     r = subprocess.run([g, "classes", "processResources", "-q", "--no-daemon"], cwd=w, env=env, capture_output=True, text=True, errors="replace")
     errors = [l for l in (r.stdout + r.stderr).splitlines() if l.strip()][:12]
     if r.returncode != 0:
+        say(f"{ver}: BUILD FAILED")
         return f"== {ver}\nBUILD FAILED\n" + "\n".join(errors), 0, 0
     logs = {k: P / f"{k}2_{ver}.log" for k in ("srv", "cb", "cc")}
     for f in logs.values():
         f.unlink(missing_ok=True)
     procs = []
 
-    def start(cmd, log, extra_opts="", stdin=None):
+    def start(name, cmd, log, extra_opts="", stdin=False):
         e = dict(env)
         e["JAVA_TOOL_OPTIONS"] = (e.get("JAVA_TOOL_OPTIONS", "") + " -Dmatlist.check=1 " + extra_opts).strip()
-        p = subprocess.Popen(cmd, cwd=w, env=e, stdin=stdin, stdout=open(log, "wb"), stderr=subprocess.STDOUT,
-                             creationflags=subprocess.CREATE_NO_WINDOW)
+        p = hidden_desktop.DesktopProc(cmd, w, e, DESKTOP_NAME, log, stdin=stdin)
         procs.append(p)
         ALL_PROCS.append(p)
+        say(f"{ver}: {name} started (process {p.pid}, on the hidden desktop)")
         return p
+
+    def stage(text, started):
+        if not started:
+            return "not started"
+        n = text.count("TMPPROBE")
+        if n:
+            last = [l for l in text.splitlines() if "TMPPROBE" in l][-1].split("TMPPROBE", 1)[1].strip()
+            return f"test step {n}: {last[:70]}"
+        if "Setting user" in text:
+            return "game is up, loading"
+        return "starting"
     try:
-        server = start([g, "runServer", "--no-daemon"], logs["srv"], stdin=subprocess.PIPE)
-        bob = start([g, "runClient", "--no-daemon", "-PrunDir=run-b", "-Puser=Bob"], logs["cb"], f"-Dmatlist.role=Bob -Dmatlist.port={port}")
+        server = start("server", [g, "runServer", "--no-daemon"], logs["srv"], stdin=True)
+        bob = start("client Bob", [g, "runClient", "--no-daemon", "-PrunDir=run-b", "-Puser=Bob"], logs["cb"], f"-Dmatlist.role=Bob -Dmatlist.port={port}")
         windows.add(bob, slot * 2 + 1)
         time.sleep(4)
-        cara = start([g, "runClient", "--no-daemon", "-PrunDir=run-c", "-Puser=Cara"], logs["cc"], f"-Dmatlist.role=Cara -Dmatlist.port={port}")
+        cara = start("client Cara", [g, "runClient", "--no-daemon", "-PrunDir=run-c", "-Puser=Cara"], logs["cc"], f"-Dmatlist.role=Cara -Dmatlist.port={port}")
         windows.add(cara, slot * 2)
-        opped, notes = False, []
-        for _ in range(700):
+        opped, notes, last_say, beat = False, [], "", 0
+        for tick in range(700):
             srv, cb, cc = read(logs["srv"]), read(logs["cb"]), read(logs["cc"])
             if not opped and "Done (" in srv:
                 server.stdin.write(b"op Cara\n")
                 server.stdin.flush()
                 opped = True
+                say(f"{ver}: the server is ready, Cara is made operator")
+            status = f"{ver}: server {'ready' if opped else 'starting'} | Bob: {stage(cb, True)} | Cara: {stage(cc, True)}"
+            if status != last_say:
+                say(status)
+                last_say = status
+            if tick - beat >= 20:
+                beat = tick
+                shown = hidden_desktop.count_windows(desktop)
+                say(f"{ver}: still running, {tick} s; game windows on the hidden desktop: {shown}; free memory {psutil.virtual_memory().available / 2**30:.1f} GB")
             if windows.abort:
                 notes.append("ABORTED: " + windows.abort)
                 break
@@ -399,14 +511,19 @@ def run_version(ver, slot, windows):
             if "FAILURE: Build failed" in cc + cb + srv:
                 notes.append("BUILD FAILED")
                 break
+            if bob.poll() is not None and cara.poll() is not None and tick > 30:
+                notes.append("BOTH CLIENTS ENDED")
+                break
             time.sleep(1)
         cb, cc, srv = read(logs["cb"]), read(logs["cc"]), read(logs["srv"])
         both = cb + "\n" + cc
         lines = [f"== {ver}"]
         lines += sorted({"MIXIN FAILED: " + l[:200] for l in (both + srv).splitlines() if re.search(r"Mixin apply.*failed", l)})
         lines += notes
+        lines.append("mouse lock blocked in the games: " + str(both.count("TMPLOCK the mouse lock is blocked")) + " of 2 clients")
         lines += sorted({l.split("TMPPROBE", 1)[1] for l in both.splitlines() if "TMPPROBE" in l})[:40]
         ok, last = both.count(" OK "), both.count("took it out again") + both.count("after taking out")
+        say(f"{ver}: finished (ok-lines {ok}, last-lines {last}){' - ' + notes[0] if notes else ''}")
         return "\n".join(lines), ok, last
     finally:
         for p in procs:
@@ -416,12 +533,16 @@ def run_version(ver, slot, windows):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("versions", nargs="+")
-    ap.add_argument("--jobs", type=int, default=3, help="how many versions at the same time (3 = 6 windows; measured: 4 was slower and failed twice)")
+    ap.add_argument("--jobs", type=int, default=5, help="how many versions at the same time: 5 for small windows (about 63 percent of the memory), 3 for full HD windows (the video memory is the limit)")
     a = ap.parse_args()
     LOGS.mkdir(parents=True, exist_ok=True)
     STOP_FILE.unlink(missing_ok=True)
+    PROGRESS_FILE.unlink(missing_ok=True)
     atexit.register(kill_all)
     kill_leftovers()
+    desktop = hidden_desktop.create_desktop(DESKTOP_NAME)
+    say(f"the second desktop '{DESKTOP_NAME}' is ready: the games run there, not on your screen")
+    say(f"versions: {', '.join(a.versions)}; {a.jobs} at a time; progress is also written to {PROGRESS_FILE}; stop everything with {STOP_FILE}")
     set_layout(2 * min(a.jobs, len(a.versions)))
     windows = Windows()
     summary = []
@@ -429,17 +550,24 @@ def main():
 
     def one(args):
         i, v = args
-        text, ok, last = run_version(v, i % a.jobs, windows)
+        text, ok, last = run_version(v, i % a.jobs, windows, desktop)
         (LOGS / f"run_{v}.log").write_text(text, encoding="utf-8")
         verdict = "PASS" if ok == 3 and last == 2 and "MIXIN FAILED" not in text and "FAIL" not in text else "NOT PASSED"
         return f"{text}\nok-lines: {ok} last-lines: {last}  (a pass is 3 and 2)  -> {verdict}"
 
     # a slot (port, grid place) is only used by one version at a time: the versions run in groups of --jobs
-    for g in range(0, len(a.versions), a.jobs):
-        group = list(enumerate(a.versions[g:g + a.jobs]))
+    groups = [a.versions[g:g + a.jobs] for g in range(0, len(a.versions), a.jobs)]
+    for n, names in enumerate(groups):
+        t0 = time.time()
+        ETA_END[0] = t0 + sum(seconds_for(len(x)) for x in groups[n:])
+        say(f"batch {n + 1} of {len(groups)}: {', '.join(names)} (expected {seconds_for(len(names))} s for this batch)")
         with ThreadPoolExecutor(max_workers=a.jobs) as ex:
-            summary += list(ex.map(one, group))
+            summary += list(ex.map(one, list(enumerate(names))))
+        remember_seconds(len(names), time.time() - t0)
     windows.stop = True
+    kill_all()
+    hidden_desktop.close_desktop(desktop)
+    say("everything is finished; the second desktop is closed")
     summary.append(f"memory of the PC: highest use {windows.mem_peak:.0f} %, least free {windows.free_min:.1f} GB")
     if windows.events:
         summary.append("focus events:\n  " + "\n  ".join(windows.events))

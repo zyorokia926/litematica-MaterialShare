@@ -4,3 +4,4 @@ run/
 .superpowers/
 *.class
 libs/
+__pycache__/
