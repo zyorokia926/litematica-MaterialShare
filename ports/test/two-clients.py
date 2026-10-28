@@ -471,9 +471,10 @@ def run_version(ver, slot, windows, desktop):
     def stage(text, started):
         if not started:
             return "not started"
-        n = text.count("TMPPROBE")
+        checks = [l for l in text.splitlines() if "TMPPROBE" in l and "] ACT " not in l]  # the ACT lines are the actions, shown one by one in the log
+        n = len(checks)
         if n:
-            last = [l for l in text.splitlines() if "TMPPROBE" in l][-1].split("TMPPROBE", 1)[1].strip()
+            last = checks[-1].split("TMPPROBE", 1)[1].strip()
             return f"test step {n}: {last[:70]}"
         if "Setting user" in text:
             return "game is up, loading"
@@ -486,6 +487,7 @@ def run_version(ver, slot, windows, desktop):
         cara = start("client Cara", [g, "runClient", "--no-daemon", "-PrunDir=run-c", "-Puser=Cara"], logs["cc"], f"-Dmatlist.role=Cara -Dmatlist.port={port}")
         windows.add(cara, slot * 2)
         opped, notes, last_say, beat = False, [], "", 0
+        reported = {"Bob": 0, "Cara": 0}  # how many probe lines of each player are already in the progress log
         for tick in range(700):
             srv, cb, cc = read(logs["srv"]), read(logs["cb"]), read(logs["cc"])
             if not opped and "Done (" in srv:
@@ -493,6 +495,11 @@ def run_version(ver, slot, windows, desktop):
                 server.stdin.flush()
                 opped = True
                 say(f"{ver}: the server is ready, Cara is made operator")
+            for who, txt in (("Bob", cb), ("Cara", cc)):  # every action and check of the players, one line each (the page shows them in Japanese or English)
+                mine = [l.split("TMPPROBE", 1)[1].strip() for l in txt.splitlines() if "TMPPROBE" in l]
+                for l in mine[reported[who]:]:
+                    say(f"{ver}: {l}")
+                reported[who] = len(mine)
             status = f"{ver}: server {'ready' if opped else 'starting'} | Bob: {stage(cb, True)} | Cara: {stage(cc, True)}"
             if status != last_say:
                 say(status)
@@ -539,6 +546,14 @@ def start_progress_page():
     """every test run can be watched at http://localhost:8765/ (progress_view.py, kept running after the test; started only once)"""
     port = int(os.environ.get("MATERIALSHARE_PORT", "8765"))
     url = f"http://localhost:{port}/"
+    newest = max((HERE / f).stat().st_mtime for f in ("progress_view.py", "log_ja.py"))
+    for p in psutil.process_iter(["cmdline", "create_time"]):  # a viewer that started before its source was changed shows the old page: restart it
+        try:
+            if any("progress_view.py" in a for a in (p.info["cmdline"] or [])) and p.info["create_time"] < newest:
+                p.kill()
+                time.sleep(1)
+        except psutil.Error:
+            pass
     try:
         with socket.create_connection(("127.0.0.1", port), timeout=1):
             return url  # already running (it reads the same progress.txt)

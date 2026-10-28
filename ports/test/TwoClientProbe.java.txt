@@ -62,6 +62,11 @@ public final class TmpProbe {
 
     static final Sender SEND = (c, s) -> c.player.networkHandler.sendChatCommand(s);
 
+    /** one action of a player, for the progress page (it shows "who did what" in Japanese; keep the wording: progress_view.py translates it) */
+    static void act(String s) {
+        out("ACT " + s);
+    }
+
     static void next(int w) {
         step++;
         wait = w;
@@ -109,6 +114,7 @@ public final class TmpProbe {
                         P = ProjectNames.forList(list);
                         dev.materialshare.client.config.Configs.Generic.SHOW_INTRO.setBooleanValue(false);
                         dev.materialshare.client.config.Configs.Generic.AUTO_IMPORT.setBooleanValue(false);
+                        act("opens the material list");
                         GuiBase.openGui(new GuiMaterialList(list));
                         next(CARA ? 200 : 100);
                     }
@@ -119,6 +125,7 @@ public final class TmpProbe {
                             Map<String, Integer> all = new LinkedHashMap<>();
                             all.put("minecraft:stone", 500);
                             all.put("minecraft:oak_planks", 100);
+                            act("shares the material list as a project: minecraft:stone=500, minecraft:oak_planks=100");
                             ClientNet.sendCreate(P, all);
                         }
                         next(40);
@@ -134,10 +141,12 @@ public final class TmpProbe {
                         }
                         ClientProjectCache.select(P);
                         out("sees project with " + ClientProjectCache.selected().get().items().size() + " items");
+                        act("takes charge of minecraft:stone");
                         ClientNet.sendClaim(P, "minecraft:stone", c.player.getUuid(), true);
                         next(30);
                     }
                     case 3 -> {
+                        act("sets own count of minecraft:stone to " + (CARA ? 10 : 20));
                         ClientNet.sendCollected(P, "minecraft:stone", c.player.getUuid(), CARA ? 10 : 20);
                         next(60);
                     }
@@ -160,11 +169,16 @@ public final class TmpProbe {
                         cmd(c, "materialshare storage");
                         if (CARA) {
                             // a wheel-style change by Cara must reach Bob; the storage is set up for the hand-in
+                            act("places a chest at " + at);
                             cmd(c, "setblock " + at + " minecraft:chest");
+                            act("registers a storage box around " + at);
                             ClientNet.sendStorageAdd(P, Area.between("Box", c.world.getRegistryKey().getValue().toString(), chest.getX() - 3, chest.getY() - 1, chest.getZ() - 3, chest.getX() + 3, chest.getY() + 2, chest.getZ() + 3));
                             other = byName("Bob");
+                            act("gives Bob 64 minecraft:stone");
                             cmd(c, "give Bob minecraft:stone 64");
+                            act("teleports Bob next to the chest " + chest.getX() + " " + chest.getY() + " " + (chest.getZ() + 2));
                             cmd(c, "tp Bob " + chest.getX() + " " + chest.getY() + " " + (chest.getZ() + 2));
+                            act("changes own count of minecraft:stone to 15");
                             ClientNet.sendCollected(P, "minecraft:stone", c.player.getUuid(), 15);
                         }
                         next(80);
@@ -202,6 +216,7 @@ public final class TmpProbe {
                                 wait = 20;
                                 return;
                             }
+                            act("opens the chest at " + at);
                             c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
                             next(25);
                         }
@@ -214,6 +229,7 @@ public final class TmpProbe {
                         } else {
                             if (c.currentScreen == null && since < 4) {
                                 out("block at chest: " + c.world.getBlockState(chest).getBlock() + ", retrying");
+                                act("opens the chest again at " + at);
                                 c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
                                 wait = 25;
                                 return;
@@ -222,6 +238,7 @@ public final class TmpProbe {
                             out("screen=" + (c.currentScreen == null ? "null" : c.currentScreen.getClass().getSimpleName()) + " pos=" + c.player.getBlockPos() + " chest=" + chest + " stone=" + c.player.getInventory().count(net.minecraft.item.Items.STONE));
                             for (int i = h.slots.size() - 36; i < h.slots.size(); i++) {
                                 if (h.getSlot(i).getStack().getItem() == net.minecraft.item.Items.STONE) {
+                                    act("moves minecraft:stone into the chest");
                                     c.interactionManager.clickSlot(h.syncId, i, 0, SlotActionType.QUICK_MOVE, c.player);
                                     break;
                                 }
@@ -231,21 +248,25 @@ public final class TmpProbe {
                     }
                     case 8 -> {
                         out("own view after hand-in (chest open): " + claims(stone) + " stock=" + ClientProjectCache.storage(P).stock());
+                        act("closes the chest");
                         c.player.closeHandledScreen();
                         next(20);
                     }
                     case 9 -> {
                         // take half out again: numbers must go down for both
+                        act("opens the chest at " + at + " to take stone out");
                         c.interactionManager.interactBlock(c.player, Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(chest), Direction.UP, chest, false));
                         next(25);
                     }
                     case 10 -> {
                         var h = c.player.currentScreenHandler;
+                        act("takes the stone out of the chest");
                         c.interactionManager.clickSlot(h.syncId, 0, 0, SlotActionType.QUICK_MOVE, c.player);
                         next(30);
                     }
                     case 11 -> {
                         out("after taking out: " + claims(stone) + " stock=" + ClientProjectCache.storage(P).stock());
+                        act("closes the chest");
                         c.player.closeHandledScreen();
                         next(60);
                     }

@@ -18,6 +18,9 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import log_ja  # noqa: E402  (the Japanese wording of the log lines)
+
 LOGS = Path(os.environ.get("MATERIALSHARE_LOGS", Path(tempfile.gettempdir()) / "materialshare-test-logs"))
 PORT = int(os.environ.get("MATERIALSHARE_PORT", "8765"))
 LINE = re.compile(r"^\[(\d+):(\d+)\] (?:(1\.\d+(?:\.\d+)?): )?(.*?)(?: \| [^|]*ends about .*)?$")
@@ -47,7 +50,7 @@ def snapshot():
             info["batch"] = msg.split(" (expected")[0]
         elif "everything is finished" in msg:
             info["all_done"] = True
-        log.append({"t": f"{m[1]}:{m[2]}", "v": ver or "", "m": msg})
+        log.append({"t": f"{m[1]}:{m[2]}", "v": ver or "", "m": msg, "ja": log_ja.to_ja(msg) or "", "st": log_ja.is_status(msg)})
         if not ver:
             continue
         v = vers.setdefault(ver, {"ver": ver, "pct": 0, "text": "", "best": 0, "result": "", "step": 0, "since": sec})
@@ -62,12 +65,15 @@ def snapshot():
             if not steps and key in msg:
                 v["pct"] = max(v["pct"], pct)
                 v["text"] = msg[:70]
+                v["raw"] = msg
                 break
         if msg.startswith("finished"):
             ok = re.search(r"ok-lines (\d+), last-lines (\d+)", msg)
             good = bool(ok) and ok[1] == "3" and ok[2] == "2" and "FAIL" not in msg
             v.update(result="pass" if good else "fail", pct=100, text=msg[len("finished "):] if msg.startswith("finished ") else msg)
     rows =[vers.get(v["ver"] if isinstance(v, dict) else v) or {"ver": v if isinstance(v, str) else v["ver"], "pct": 0, "text": "waiting", "best": 0, "result": ""} for v in (total or order)]
+    for r in rows:
+        r["ja"] = log_ja.to_ja(r["raw"]) or r["text"] if r.get("raw") else log_ja.card_ja(r["text"])
     done = sum(1 for r in rows if r["result"])
     finished = info["all_done"] or (bool(rows) and done == len(rows))
     eta_ms = 0
@@ -77,7 +83,7 @@ def snapshot():
         eta_ms = int(time.mktime((t.tm_year, t.tm_mon, t.tm_mday, h, mi, s, 0, 0, -1)) * 1000)
     return {"rows": rows, "done": done, "total": len(rows), "finished": finished, "eta": eta_ms,
             "start": int(path.stat().st_ctime * 1000) if path.exists() else 0,
-            "mem": info["mem"], "batch": info["batch"], "log": log[-400:], "now": int(time.time() * 1000),
+            "mem": info["mem"], "batch": info["batch"], "batch_ja": log_ja.batch_ja(info["batch"]) if info["batch"] else "", "log": log[-400:], "now": int(time.time() * 1000),
             "stop": (LOGS / "STOP").exists()}
 
 
@@ -111,7 +117,7 @@ button.stop{border-color:var(--ng);color:var(--ng);font-weight:600;padding:5px 1
 #warn{display:none;margin-top:12px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--ng) 14%,var(--card));color:var(--ng);font-size:13px}
 @media(max-width:520px){h1{font-size:21px}.grid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><main>
-<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span style="display:flex;gap:10px;align-items:center"><span class="chip" id="cnt"></span><button id="stop" class="stop" title="全部のテストを止めます(ゲームの窓も閉じます)">■ テストを停止</button></span></div>
+<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span style="display:flex;gap:10px;align-items:center"><span class="chip" id="cnt"></span><button id="lang" title="ログとカードの表示を、日本語(わかりやすい説明)と英語(細かい元のログ)で切り替えます">English</button><button id="stop" class="stop" title="全部のテストを止めます(ゲームの窓も閉じます)">■ テストを停止</button></span></div>
 <div class="total"><i id="tot"></i></div>
 <div class="chips"><span class="chip">経過 <b id="el">-</b></span><span class="chip">空きメモリ <b id="mem">-</b></span><span class="chip" id="batch">-</span><span class="chip">最終更新 <b id="upd">-</b></span></div></section>
 <div id="warn">更新用のプログラム(progress_view.py)が止まっています。表示は最後の状態です。</div>
@@ -120,7 +126,7 @@ button.stop{border-color:var(--ng);color:var(--ng);font-weight:600;padding:5px 1
 <label><input type="checkbox" id="follow" checked> 最新を追う</label><label><input type="checkbox" id="quiet"> 定期メッセージを隠す</label><button id="all">全 ver を表示</button></span></div>
 <div id="log"></div></main>
 <script>
-var BASE=location.protocol==='http:'?'':'http://localhost:__PORT__',D=null,sel='',COL={},PAL=['#60a5fa','#f59e0b','#34d399','#f472b6','#a78bfa','#fb7185','#22d3ee','#fbbf24','#4ade80','#c084fc','#f97316','#38bdf8','#e879f9','#a3e635'];
+var BASE=location.protocol==='http:'?'':'http://localhost:__PORT__',D=null,sel='',COL={},LANG='ja',PAL=['#60a5fa','#f59e0b','#34d399','#f472b6','#a78bfa','#fb7185','#22d3ee','#fbbf24','#4ade80','#c084fc','#f97316','#38bdf8','#e879f9','#a3e635'];
 function p(n){return (n<10?'0':'')+n}function mmss(s){s=Math.max(0,Math.floor(s));var h=Math.floor(s/3600);return (h?h+':'+p(Math.floor(s%3600/60)):Math.floor(s/60))+':'+p(s%60)}
 function color(v){if(!COL[v]){COL[v]=PAL[Object.keys(COL).length%PAL.length]}return COL[v]}
 var skew=0;
@@ -133,17 +139,18 @@ function clock(){if(!D)return;var now=Date.now()+skew;
 function draw(){var g=document.getElementById('grid'),html='';
  D.rows.forEach(function(r){var cls=r.result||(r.pct?'run':''),lab=r.result==='pass'?'合格':r.result==='fail'?'不合格':r.pct?r.pct+'%':'待機中',dots='';
   for(var i=1;i<=8;i++)dots+='<s class="'+(r.pct>=100||r.best>=i?'on':'')+'"></s>';
-  html+='<div class="card '+cls+(sel===r.ver?' sel':'')+'" data-v="'+r.ver+'"><h3>'+r.ver+'<span class="badge">'+lab+'</span></h3><div class="bar"><i style="width:'+r.pct+'%"></i></div><div class="dots">'+dots+'</div><small>'+esc(r.text||'')+'</small></div>'});
+  html+='<div class="card '+cls+(sel===r.ver?' sel':'')+'" data-v="'+r.ver+'"><h3>'+r.ver+'<span class="badge">'+lab+'</span></h3><div class="bar"><i style="width:'+r.pct+'%"></i></div><div class="dots">'+dots+'</div><small>'+esc((LANG==='ja'?(r.ja||r.text):r.text)||'')+'</small></div>'});
  g.innerHTML=html;
  var sum=0;D.rows.forEach(function(r){sum+=r.pct});document.getElementById('tot').style.width=(D.total?sum/D.total:0)+'%';
  var sb=document.getElementById('stop');sb.classList.toggle('hide',D.finished);sb.disabled=D.stop;sb.textContent=D.stop?'停止中...':'■ テストを停止';
  document.getElementById('cnt').innerHTML='<b>'+D.done+'</b> / '+D.total+' ver 完了';
- document.getElementById('mem').textContent=D.mem?D.mem+' GB':'-';document.getElementById('batch').textContent=D.batch||'-'}
+ document.getElementById('mem').textContent=D.mem?D.mem+' GB':'-';document.getElementById('batch').textContent=(LANG==='ja'?(D.batch_ja||D.batch):D.batch)||'-'}
 function esc(s){return s.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 function drawLog(){var L=document.getElementById('log'),q=document.getElementById('quiet').checked,html='';
  D.log.forEach(function(e){if(sel&&e.v!==sel&&e.v!=='')return;var quiet=/^still running/.test(e.m);if(q&&quiet)return;
-  var c=/FAIL|NOT PASSED|BUILD FAILED/.test(e.m)?' bad':/ok-lines 3, last-lines 2|OK /.test(e.m)?' good':'';
-  html+='<div class="'+(quiet?'quiet':'')+c+'"><span class="t">'+e.t+'</span><span class="v" style="color:'+(e.v?color(e.v):'inherit')+'">'+(e.v||'')+'</span>'+esc(e.m)+'</div>'});
+  if(LANG==='ja'&&e.st)return;
+  var c=/FAIL|NOT PASSED|BUILD FAILED|ABORTED/.test(e.m)?' bad':/ok-lines 3, last-lines 2|OK /.test(e.m)?' good':'';
+  html+='<div class="'+(quiet?'quiet':'')+c+'"><span class="t">'+e.t+'</span><span class="v" style="color:'+(e.v?color(e.v):'inherit')+'">'+(e.v||'')+'</span>'+esc(LANG==='ja'?(e.ja||e.m):e.m)+'</div>'});
  var follow=document.getElementById('follow').checked;L.innerHTML=html;if(follow)L.scrollTop=L.scrollHeight;
  document.getElementById('logsel').textContent=sel?'('+sel+' だけ)':'(全 ver)'}
 async function poll(){try{var r=await fetch(BASE+'/data.json',{cache:'no-store'});D=await r.json();skew=D.now-Date.now();skew=Math.abs(skew)<2000?0:skew;
@@ -151,6 +158,9 @@ async function poll(){try{var r=await fetch(BASE+'/data.json',{cache:'no-store'}
   document.getElementById('upd').textContent=new Date().toLocaleTimeString('ja-JP');draw();drawLog();clock()}
  catch(e){document.getElementById('warn').style.display='block'}}
 document.getElementById('grid').addEventListener('click',function(e){var c=e.target.closest('.card');if(!c)return;sel=sel===c.dataset.v?'':c.dataset.v;if(D){draw();drawLog()}});
+try{if(localStorage.getItem('lang')==='en')LANG='en'}catch(e){}
+function langBtn(){var b=document.getElementById('lang');b.textContent=LANG==='ja'?'English':'日本語';b.title=LANG==='ja'?'ログとカードを、英語(細かい元のログ)で見ます':'ログとカードを、日本語(わかりやすい説明)で見ます'}
+langBtn();document.getElementById('lang').onclick=function(){LANG=LANG==='ja'?'en':'ja';try{localStorage.setItem('lang',LANG)}catch(e){}langBtn();if(D){draw();drawLog()}};
 document.getElementById('all').onclick=function(){sel='';if(D){draw();drawLog()}};document.getElementById('quiet').onchange=function(){if(D)drawLog()};
 document.getElementById('stop').onclick=async function(){
  if(!confirm('全部のテストを止めますか？\n動いているゲームの窓も閉じます(結果は「不合格」ではなく「中止」になります)。'))return;
