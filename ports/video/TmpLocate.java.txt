@@ -1,0 +1,81 @@
+package dev.materialshare.client;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.client.font.TextRenderer;
+import org.joml.Matrix4f;
+
+/**
+ * TEMPORARY, never committed to src: where the texts of the last frame were drawn (GUI units), filled by TmpTextMixin. The
+ * director finds a button, a name or a number by its words, so the shots do not depend on the layout of the screens.
+ */
+public final class TmpLocate {
+    /** one drawn text: its words and its box */
+    public record Spot(String text, double x, double y, double w, double h) {
+        public double cx() {
+            return x + w / 2;
+        }
+
+        public double cy() {
+            return y + h / 2;
+        }
+    }
+
+    static long calls, skipped, frames;
+    static List<Spot> building = new ArrayList<>();
+    static volatile List<Spot> last = List.of();
+
+    public static void drawn(String text, float x, float y, Matrix4f m, TextRenderer tr) {
+        calls++;
+        if (text == null || text.isBlank() || Math.abs(m.m00()) < 0.2) {
+            if (text != null && !text.isBlank() && skipped++ < 5) {
+                TmpProbe.out("LOCATE skipped '" + text + "' m00=" + m.m00() + " m11=" + m.m11() + " m30=" + m.m30());
+            }
+            return;  // a name tag in the world, not a screen
+        }
+        double sx = m.m00(), sy = m.m11();
+        building.add(new Spot(text.replaceAll("§.", "").strip(), x * sx + m.m30(), y * sy + m.m31(), tr.getWidth(text) * sx, 9 * sy));
+    }
+
+    /** called every frame after it was drawn */
+    public static void endFrame() {
+        frames++;
+        last = building;
+        building = new ArrayList<>();
+    }
+
+    /** the n-th (0 = top left first) text that is exactly `words`, or null */
+    public static Spot exact(String words, int n) {
+        return pick(last.stream().filter(s -> s.text().equals(words)).toList(), n);
+    }
+
+    /** the n-th text that contains `words` */
+    public static Spot contains(String words, int n) {
+        return pick(last.stream().filter(s -> s.text().contains(words)).toList(), n);
+    }
+
+    /** the text nearest to the right of (x, y) on the same line that contains `words` (for the buttons of a row) */
+    public static Spot rightOf(String rowWords, String words) {
+        Spot row = exact(rowWords, 0);  // exact: "オークの板材" must not find "ダークオークの板材"
+        if (row == null) {
+            return null;
+        }
+        return last.stream().filter(s -> s.text().contains(words) && Math.abs(s.cy() - row.cy()) < 6 && s.x() > row.x())
+                .min((a, b) -> Double.compare(a.x(), b.x())).orElse(null);
+    }
+
+    static Spot pick(List<Spot> found, int n) {
+        List<Spot> sorted = new ArrayList<>(found);
+        sorted.sort((a, b) -> Math.abs(a.y() - b.y()) > 3 ? Double.compare(a.y(), b.y()) : Double.compare(a.x(), b.x()));
+        return n < sorted.size() ? sorted.get(n) : null;
+    }
+
+    /** every text of the last frame, one line each (for writing the directions) */
+    public static String dump() {
+        StringBuilder sb = new StringBuilder("  (texts drawn so far " + calls + ", skipped " + skipped + ", frames " + frames + ")\n");
+        for (Spot s : last) {
+            sb.append(String.format("  %.0f,%.0f %.0fx%.0f %s%n", s.x(), s.y(), s.w(), s.h(), s.text()));
+        }
+        return sb.toString();
+    }
+}

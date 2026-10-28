@@ -1,0 +1,104 @@
+package dev.materialshare.client;
+
+import fi.dy.masa.litematica.data.DataManager;
+import fi.dy.masa.litematica.gui.GuiMaterialList;
+import fi.dy.masa.litematica.materials.MaterialListBase;
+import fi.dy.masa.litematica.materials.MaterialListPlacement;
+import fi.dy.masa.malilib.gui.GuiBase;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConnectScreen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.network.ServerAddress;
+import net.minecraft.client.network.ServerInfo;
+
+/** TEMPORARY, never committed: the first try of the recorder (one clip of the material list, the cursor moving over it). */
+public final class TmpProbe {
+    static final boolean P1 = "P1".equals(System.getProperty("shoot.role"));
+    static final String ME = P1 ? "P1" : "P2";
+    static final String PORT = System.getProperty("matlist.port", "25565");
+    static final String OUT = System.getProperty("shoot.out", "shots");
+    static int tick, step, wait;
+    static boolean connecting;
+    static int tried;
+    static MaterialListBase list;
+
+    public static void out(String s) {
+        System.out.println("TMPPROBE [" + ME + "] " + s);
+    }
+
+    static void next(int w) {
+        step++;
+        wait = w;
+    }
+
+    public static void init() {
+        ClientTickEvents.END_CLIENT_TICK.register(c -> {
+            tick++;
+            if (c.world == null || c.player == null) {
+                if ((!connecting || tick - tried > 400) && tick > 200 && c.currentScreen != null
+                        && (c.currentScreen instanceof TitleScreen || c.currentScreen.getClass().getSimpleName().contains("Disconnected"))) {
+                    connecting = true;
+                    tried = tick;
+                    ConnectScreen.connect(c.currentScreen, c, ServerAddress.parse("127.0.0.1:" + PORT), new ServerInfo("t", "127.0.0.1:" + PORT, false));
+                }
+                return;
+            }
+            if (c.player.age < 250 || wait-- > 0) {
+                return;
+            }
+            try {
+                if (!P1) {
+                    if (step++ > 0) {
+                        c.scheduleStop();
+                    }
+                    wait = 900;
+                    return;
+                }
+                int sw = c.getWindow().getScaledWidth(), sh = c.getWindow().getScaledHeight();
+                switch (step) {
+                    case 0 -> {
+                        var pl = DataManager.getSchematicPlacementManager().getAllSchematicsPlacements().get(0);
+                        list = new MaterialListPlacement(pl, true);
+                        DataManager.setMaterialList(list);
+                        dev.materialshare.client.config.Configs.Generic.SHOW_INTRO.setBooleanValue(false);
+                        out("window " + c.getWindow().getFramebufferWidth() + "x" + c.getWindow().getFramebufferHeight() + " gui scale " + c.getWindow().getScaleFactor());
+                        TmpRecorder.start(OUT + "/spike");
+                        GuiBase.openGui(new GuiMaterialList(list));
+                        TmpInput.moveTo(sw * 0.5, sh * 0.5, 1);
+                        next(20);
+                    }
+                    case 1 -> {
+                        TmpInput.moveTo(sw * 0.8, sh * 0.2, 1200);
+                        next(40);
+                    }
+                    case 2 -> {
+                        TmpInput.moveTo(sw * 0.3, sh * 0.5, 1500);
+                        next(40);
+                    }
+                    case 3 -> {
+                        TmpInput.scroll(-1);
+                        next(20);
+                    }
+                    case 4 -> {
+                        TmpInput.scroll(-1);
+                        TmpInput.moveTo(sw * 0.7, sh * 0.6, 1000);
+                        next(40);
+                    }
+                    case 5 -> {
+                        TmpRecorder.stop();
+                        GuiBase.openGui(null);
+                        out("SPIKE DONE");
+                        c.scheduleStop();
+                    }
+                    default -> { }
+                }
+            } catch (Exception e) {
+                out("EXC " + e);
+                e.printStackTrace(System.out);
+                TmpRecorder.stop();
+                c.scheduleStop();
+            }
+        });
+    }
+}

@@ -1,0 +1,170 @@
+package dev.materialshare.client;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import net.minecraft.client.gl.Framebuffer;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL30;
+
+/**
+ * TEMPORARY, never committed to src: records the frames of the game into a video for the introduction video (ports/video).
+ * The frames come straight from the game's own framebuffer (no window capture: the game runs on the hidden desktop), are
+ * read through two pixel buffers (one frame late, so the GPU never waits) and piped into ffmpeg (NVENC). A constant frame
+ * rate: a frame is written again when the game was slower, and left out when it was faster. Next to the video, a log of the
+ * fake mouse and of the marks of the director (one JSON object a line, "f" = the frame), for the cursor, clicks and zooms
+ * that the video editor draws.
+ */
+public final class TmpRecorder {
+    static final String FFMPEG = System.getProperty("shoot.ffmpeg", "ffmpeg");
+    static final int FPS = Integer.getInteger("shoot.fps", 60);
+    static volatile boolean recording;
+    static Process ffmpeg;
+    static OutputStream pipe;
+    static PrintWriter log;
+    static Thread writer;
+    static BlockingQueue<byte[]> queue;
+    static long t0, written;
+    static int w, h;
+    static final int[] PBO = new int[2];
+    static int index;
+    static long pendingCopies;  // how many times the frame in the other buffer must be written
+    static String file;
+
+    /** starts a clip: the video goes to file + ".mp4", the log to file + ".jsonl" */
+    public static void start(String clip) {
+        stop();
+        file = clip;
+        recording = true;
+        t0 = 0;
+        written = 0;
+        pendingCopies = 0;
+    }
+
+    public static void stop() {
+        if (!recording) {
+            return;
+        }
+        recording = false;
+        try {
+            if (queue != null) {
+                queue.put(new byte[0]);  // the end
+                writer.join(60000);
+            }
+            if (ffmpeg != null) {
+                ffmpeg.waitFor();
+                TmpProbe.out("REC done " + file + " frames=" + written + " exit=" + ffmpeg.exitValue());
+            }
+        } catch (Exception e) {
+            TmpProbe.out("REC stop failed " + e);
+        }
+        if (log != null) {
+            log.close();
+        }
+        if (PBO[0] != 0) {
+            GL15.glDeleteBuffers(PBO);
+            PBO[0] = PBO[1] = 0;
+        }
+        ffmpeg = null;
+        queue = null;
+        log = null;
+    }
+
+    /** one line of the log, at the current frame */
+    public static void event(String json) {
+        if (log != null) {
+            log.println("{\"f\":" + written + "," + json + "}");
+        }
+    }
+
+    /** called by TmpRecorderMixin before the game's framebuffer goes to the window */
+    public static void frame(Framebuffer fb) {
+        if (!recording) {
+            return;
+        }
+        try {
+            if (t0 == 0) {
+                open(fb.textureWidth, fb.textureHeight);
+            }
+            long due = (System.nanoTime() - t0) * FPS / 1_000_000_000L + 1 - written - pendingCopies;
+            if (due <= 0) {
+                return;
+            }
+            int other = 1 - index;
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, fb.fbo);
+            GL15.glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, PBO[index]);
+            GL11.glPixelStorei(GL11.GL_PACK_ALIGNMENT, 1);
+            GL11.glReadPixels(0, 0, w, h, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, 0L);
+            if (pendingCopies > 0) {
+                GL15.glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, PBO[other]);
+                ByteBuffer b = GL15.glMapBuffer(GL21.GL_PIXEL_PACK_BUFFER, GL15.GL_READ_ONLY);
+                if (b != null) {
+                    byte[] a = new byte[w * h * 4];
+                    b.get(a);
+                    for (long i = 0; i < pendingCopies; i++) {
+                        queue.put(a);
+                    }
+                    written += pendingCopies;
+                }
+                GL15.glUnmapBuffer(GL21.GL_PIXEL_PACK_BUFFER);
+            }
+            GL15.glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, 0);
+            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, 0);
+            pendingCopies = due;
+            index = other;
+        } catch (Exception e) {
+            TmpProbe.out("REC frame failed " + e);
+            recording = false;
+        }
+    }
+
+    static void open(int width, int height) throws Exception {
+        w = width;
+        h = height;
+        new File(file).getParentFile().mkdirs();
+        List<String> cmd = new ArrayList<>(List.of(FFMPEG, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgba",
+                "-s", w + "x" + h, "-r", String.valueOf(FPS), "-i", "-", "-vf", "vflip", "-c:v", "hevc_nvenc", "-preset", "p5",
+                "-rc", "vbr", "-cq", "17", "-b:v", "0", "-pix_fmt", "yuv420p", file + ".mp4"));
+        ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(new File(file + ".ffmpeg.txt"));
+        ffmpeg = pb.start();
+        pipe = new BufferedOutputStream(ffmpeg.getOutputStream(), 1 << 22);
+        log = new PrintWriter(new java.io.OutputStreamWriter(new FileOutputStream(file + ".jsonl"), StandardCharsets.UTF_8), true);
+        log.println("{\"f\":0,\"ev\":\"start\",\"w\":" + w + ",\"h\":" + h + ",\"fps\":" + FPS + "}");
+        queue = new ArrayBlockingQueue<>(8);
+        BlockingQueue<byte[]> q = queue;
+        OutputStream out = pipe;
+        writer = new Thread(() -> {
+            try {
+                while (true) {
+                    byte[] a = q.take();
+                    if (a.length == 0) {
+                        break;
+                    }
+                    out.write(a);
+                }
+                out.close();
+            } catch (Exception e) {
+                TmpProbe.out("REC writer failed " + e);
+            }
+        }, "TmpRecorder");
+        writer.start();
+        GL15.glGenBuffers(PBO);
+        for (int p : PBO) {
+            GL15.glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, p);
+            GL15.glBufferData(GL21.GL_PIXEL_PACK_BUFFER, (long) w * h * 4, GL15.GL_STREAM_READ);
+        }
+        GL15.glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, 0);
+        t0 = System.nanoTime();
+        TmpProbe.out("REC start " + file + " " + w + "x" + h + " @" + FPS);
+    }
+}

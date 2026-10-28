@@ -118,12 +118,12 @@ button.stop{border-color:var(--ng);color:var(--ng);font-weight:600;padding:5px 1
 #warn{display:none;margin-top:12px;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,var(--ng) 14%,var(--card));color:var(--ng);font-size:13px}
 @media(max-width:520px){h1{font-size:21px}.grid{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><main>
-<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span style="display:flex;gap:10px;align-items:center"><span class="chip" id="cnt"></span><button id="lang" title="ログとカードの表示を、日本語(わかりやすい説明)と英語(細かい元のログ)で切り替えます">English</button><button id="stop" class="stop" title="全部のテストを止めます(ゲームの窓も閉じます)">■ テストを停止</button></span></div>
+<section class="hero"><div class="top"><h1 id="head">読み込み中...</h1><span style="display:flex;gap:10px;align-items:center"><span class="chip" id="cnt"></span><button id="stop" class="stop" title="全部のテストを止めます(ゲームの窓も閉じます)">■ テストを停止</button></span></div>
 <div class="total"><i id="tot"></i></div>
 <div class="chips"><span class="chip">経過 <b id="el">-</b></span><span class="chip">空きメモリ <b id="mem">-</b></span><span class="chip" id="batch">-</span><span class="chip">最終更新 <b id="upd">-</b></span></div></section>
 <div id="warn">更新用のプログラム(progress_view.py)が止まっています。表示は最後の状態です。</div>
 <div class="grid" id="grid"></div>
-<div class="logh"><h2>作業中のログ <span id="logsel" style="color:var(--mut);font-weight:400"></span></h2><span style="display:flex;gap:12px;align-items:center">
+<div class="logh"><span style="display:flex;gap:12px;align-items:center"><h2>作業中のログ <span id="logsel" style="color:var(--mut);font-weight:400"></span></h2><button id="lang" title="ログとカードの表示を、日本語(わかりやすい説明)と英語(細かい元のログ)で切り替えます">English</button></span><span style="display:flex;gap:12px;align-items:center">
 <label><input type="checkbox" id="follow" checked> 最新を追う</label><label><input type="checkbox" id="quiet"> 定期メッセージを隠す</label><button id="all">全 ver を表示</button></span></div>
 <div id="log"></div></main>
 <script>
