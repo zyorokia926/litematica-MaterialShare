@@ -71,6 +71,7 @@ def snapshot():
             ok = re.search(r"ok-lines (\d+), last-lines (\d+)", msg)
             good = bool(ok) and ok[1] == "3" and ok[2] == "2" and "FAIL" not in msg
             v.update(result="pass" if good else "fail", pct=100, text=msg[len("finished "):] if msg.startswith("finished ") else msg)
+            v.pop("raw", None)  # the card shows the result now, not the last stage
     rows =[vers.get(v["ver"] if isinstance(v, dict) else v) or {"ver": v if isinstance(v, str) else v["ver"], "pct": 0, "text": "waiting", "best": 0, "result": ""} for v in (total or order)]
     for r in rows:
         r["ja"] = log_ja.to_ja(r["raw"]) or r["text"] if r.get("raw") else log_ja.card_ja(r["text"])
