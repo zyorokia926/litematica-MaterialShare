@@ -20,5 +20,6 @@
 - Removed the "time left" estimate.
 - Fixed: a count changed with the mouse wheel was pushed back to the number of items carried by "Update my collected counts automatically". Now only items picked up since the last look are added.
 - Storage corner marks can be cleared ([Clear marks] button, hotkey, or /materialshare storage clear).
+- Starting a project works with the Syncmatica of Minecraft 1.20.5 and 1.20.6 too (it renamed the method the add-on asks for).
 - Protocol 16: the server and every client need this version.
 - Removed: location memo, project overview screen, login message in the chat.

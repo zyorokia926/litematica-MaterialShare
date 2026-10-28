@@ -25,13 +25,22 @@ public final class SyncmaticaCheck {
         return placement.isPresent() && isShared(placement.get());
     }
 
+    /** Syncmatica for 1.20.5 and later calls it syncmatica$getServerId (a prefixed interface method); older ones getServerId. */
+    private static java.lang.reflect.Method serverIdMethod(Class<?> container) throws NoSuchMethodException {
+        try {
+            return container.getMethod("getServerId");
+        } catch (NoSuchMethodException old) {
+            return container.getMethod("syncmatica$getServerId");
+        }
+    }
+
     static boolean isShared(SchematicPlacement placement) {
         try {
             Class<?> container = Class.forName(CONTAINER);
             if (!container.isInstance(placement)) {
                 return false;
             }
-            Object id = container.getMethod("getServerId").invoke(placement);
+            Object id = serverIdMethod(container).invoke(placement);
             if (!(id instanceof UUID serverId)) {
                 return false;
             }
