@@ -2,6 +2,10 @@
 
 **日本語** | [English](#english)
 
+> [!NOTE]
+> 🎬 **紹介動画(7分)**: [日本語](https://youtu.be/CjAb168fg5U) ・ [English](https://youtu.be/9dLOSU39rR4)
+> 使い方を、実際の画面で見られます。
+
 > [!TIP]
 > 機能が多いので、**Ctrl + F** で探したい機能(例: 「保管場所」)を検索してください。下の「機能の一覧」の「↓」からも、その機能にジャンプできます。
 
@@ -463,6 +467,10 @@ Litematica / malilib の画面には mixin の `@Inject` だけで追加して�
 # Litematica MaterialShare
 
 **English** | [日本語](#litematica-materialshare)
+
+> [!NOTE]
+> 🎬 **Overview video (7 min)**: [English](https://youtu.be/9dLOSU39rR4) · [日本語](https://youtu.be/CjAb168fg5U)
+> See how it works on real game screens.
 
 > [!TIP]
 > Many features: press **Ctrl + F** to search for the one you want (for example "storage"), or use the "↓" links in the "Features" table below.
