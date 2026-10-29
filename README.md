@@ -3,7 +3,7 @@
 **日本語** | [English](#english)
 
 > [!IMPORTANT]
-> 💬 **不具合や改善の報告は、Discord サーバーで受け付けています**: **[参加はこちら(https://discord.gg/tjKqVeGvpA)](https://discord.gg/tjKqVeGvpA)**
+> 💬 **不具合や改善の報告は、Discord サーバーで受け付けています**: **[参加はこちら(https://discord.gg/42vyNVkdff)](https://discord.gg/42vyNVkdff)**
 
 > [!NOTE]
 > 🎬 **紹介動画(7分)**: [日本語](https://youtu.be/CjAb168fg5U) ・ [English](https://youtu.be/9dLOSU39rR4)
@@ -475,7 +475,7 @@ Litematica / malilib の画面には mixin の `@Inject` だけで追加して�
 **English** | [日本語](#litematica-materialshare)
 
 > [!IMPORTANT]
-> 💬 **Bug reports and suggestions are welcome on our Discord server**: **[Join here (https://discord.gg/tjKqVeGvpA)](https://discord.gg/tjKqVeGvpA)**
+> 💬 **Bug reports and suggestions are welcome on our Discord server**: **[Join here (https://discord.gg/42vyNVkdff)](https://discord.gg/42vyNVkdff)**
 
 > [!NOTE]
 > 🎬 **Overview video (7 min)**: [English](https://youtu.be/9dLOSU39rR4) · [日本語](https://youtu.be/CjAb168fg5U)
