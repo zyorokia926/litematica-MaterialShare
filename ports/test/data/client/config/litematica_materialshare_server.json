@@ -1,7 +1,0 @@
-{
-  "_help": "destructiveActions: everyone | op (deleting a schematic, emptying the trash, resetting assignments). editOthers: everyone | self (self \u003d players may only change their own assignments). operatorLevel: permission level counted as operator (2 \u003d /op). maxProjects: 1-64.",
-  "destructiveActions": "everyone",
-  "editOthers": "everyone",
-  "operatorLevel": 2,
-  "maxProjects": 64
-}

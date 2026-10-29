@@ -5,3 +5,9 @@ run/
 *.class
 libs/
 __pycache__/
+
+# work files (Claude, tests, video, Modrinth page material): kept locally, not on GitHub
+CLAUDE.md
+HANDOFF.md
+ports/
+dist/modrinth/

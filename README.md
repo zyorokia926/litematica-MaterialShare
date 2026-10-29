@@ -944,8 +944,6 @@ Building needs the jars of Litematica 0.14.7, malilib 0.15.4, Syncmatica and Mod
 
 ### 1.19.4 以外の ver / Other versions
 
-1.19.4 以外の ver は、同じソースから `python ports/build.py <ver>` で作れます(合う Litematica、malilib、Syncmatica、Mod Menu を Modrinth から取得して、jar を `dist/` に置きます)。Linux と Windows の両方で動きます。Windows では、`PORT_WORK`(作業フォルダ)、`GRADLE`(Gradle 8.x)、`GRADLE9`(Gradle 9.2。1.20.5 以降)、`JAVA21_HOME`(Java 21)の環境変数で、場所を指定します。1.20.5 以降は Java 21 が必要です。
-1つのサーバーに2人のクライアントをつないで試すテストは、`python ports/test/two-clients.py <ver> ...` です(Windows 用。ゲームは隠したデスクトップで動かし、画面、キーボード、マウスを使いません)。Linux では `ports/test/two-clients.sh <ver>` を使います。
+1.19.4 以外の ver の jar も、同じソースから作っています(ビルド用のスクリプトは、このリポジトリには入れていません)。配布は Modrinth です。
 
-Versions other than 1.19.4 are built from the same source with `python ports/build.py <version>` (it downloads the matching Litematica, malilib, Syncmatica and Mod Menu from Modrinth and puts the jar into `dist/`). It works on Linux and on Windows. On Windows the locations are given by the environment variables `PORT_WORK` (work folder), `GRADLE` (Gradle 8.x), `GRADLE9` (Gradle 9.2, for 1.20.5 and later) and `JAVA21_HOME` (Java 21). 1.20.5 and later need Java 21.
-The test with two clients on one server is `python ports/test/two-clients.py <version> ...` (for Windows; the game runs on a hidden desktop and never uses your screen, keyboard or mouse). On Linux use `ports/test/two-clients.sh <version>`.
+The jars for versions other than 1.19.4 are built from the same source (the build scripts are not part of this repository). They are distributed on Modrinth.
