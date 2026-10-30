@@ -22,6 +22,11 @@ public final class ClientProjectCache {
     private static final Map<String, java.util.List<dev.materialshare.common.Packets.Offer>> SURPLUS = new LinkedHashMap<>();
     private static final Map<String, dev.materialshare.common.Packets.StorageData> STORAGE = new LinkedHashMap<>();
     private static final Map<String, Map<UUID, Long>> ACTIVITY = new LinkedHashMap<>();
+    /** What lies in your own ender chest (the server sends it when it changes). */
+    private static Map<String, Integer> ender = Map.of();
+    private static final Map<String, java.util.List<dev.materialshare.common.Zone>> ZONES = new LinkedHashMap<>();
+    /** The zone each project is narrowed to, chosen by you alone (not shared). */
+    private static final Map<String, String> CHOSEN_ZONE = new LinkedHashMap<>();
     private static final Map<String, Long> ACTIVITY_ASKED = new LinkedHashMap<>();
     private ClientProjectCache() {
     }
@@ -42,6 +47,10 @@ public final class ClientProjectCache {
 
     public static Collection<Project> projects() {
         return PROJECTS.values();
+    }
+
+    public static Optional<Project> get(String name) {
+        return Optional.ofNullable(PROJECTS.get(name));
     }
 
     public static Optional<Project> selected() {
@@ -82,12 +91,56 @@ public final class ClientProjectCache {
         return NAMES.getOrDefault(uuid, uuid.toString().substring(0, 8));
     }
 
+    static void setZones(dev.materialshare.common.Packets.ZoneList list) {
+        if (list.zones().isEmpty()) {
+            ZONES.remove(list.project());
+        } else {
+            ZONES.put(list.project(), list.zones());
+        }
+        version++;
+    }
+
+    public static java.util.List<dev.materialshare.common.Zone> zones(String project) {
+        return ZONES.getOrDefault(project, java.util.List.of());
+    }
+
+    /** The zone you narrowed this project to; empty when none is chosen (or it was removed). */
+    public static Optional<dev.materialshare.common.Zone> chosenZone(String project) {
+        String name = CHOSEN_ZONE.get(project);
+        return name == null ? Optional.empty() : zones(project).stream().filter(z -> z.name().equals(name)).findFirst();
+    }
+
+    /** The chosen zone of the selected project. */
+    public static Optional<dev.materialshare.common.Zone> chosenZone() {
+        return selected().flatMap(p -> chosenZone(p.name()));
+    }
+
+    static void chooseZone(String project, String zone) {
+        if (zone == null) {
+            CHOSEN_ZONE.remove(project);
+        } else {
+            CHOSEN_ZONE.put(project, zone);
+        }
+        version++;
+    }
+
+    static void setEnder(Map<String, Integer> counts) {
+        ender = Map.copyOf(counts);
+        version++;
+    }
+
+    /** Your ender chest's counts, or nothing when the setting to count it is off. */
+    static Map<String, Integer> ender() {
+        return dev.materialshare.client.config.Configs.Generic.COUNT_ENDER.getBooleanValue() ? ender : Map.of();
+    }
+
     static void replaceAll(Collection<Project> projects) {
         PROJECTS.clear();
         SURPLUS.clear();
         STORAGE.clear();
         ACTIVITY.clear();
         REMOVED.clear();
+        ZONES.clear();
         projects.forEach(p -> PROJECTS.put(p.name(), p));
         version++;
         dropStaleSelection();
@@ -236,6 +289,7 @@ public final class ClientProjectCache {
 
     static void remove(String name) {
         PROJECTS.remove(name);
+        ZONES.remove(name);
         SURPLUS.remove(name);
         STORAGE.remove(name);
         ACTIVITY.remove(name);
@@ -261,6 +315,9 @@ public final class ClientProjectCache {
         ACTIVITY.clear();
         ACTIVITY_ASKED.clear();
         REMOVED.clear();
+        ZONES.clear();
+        CHOSEN_ZONE.clear();
+        ender = Map.of();
         selected = null;
         version++;
         namesVersion++;

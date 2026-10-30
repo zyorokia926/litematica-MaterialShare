@@ -83,7 +83,7 @@ public final class ClientFilter {
 
     /**
      * The rows to show: when the selected project is one part (sub-region) of this list's schematic, only the
-     * items of that part; then the chosen filter on top.
+     * items of that part; with a zone chosen, only what the zone needs; then the chosen filter on top.
      */
     public static Collection<MaterialListEntry> apply(Collection<MaterialListEntry> entries,
             fi.dy.masa.litematica.materials.MaterialListBase list) {
@@ -93,7 +93,8 @@ public final class ClientFilter {
             return entries;
         }
         boolean partOnly = list != null && Parts.scopeOf(list).isPresent();
-        if (current == RowFilter.ALL && !partOnly) {
+        var zone = ClientProjectCache.chosenZone(project.get().name());
+        if (current == RowFilter.ALL && !partOnly && zone.isEmpty()) {
             return entries;
         }
         Collection<MaterialListEntry> result = new ArrayList<>();
@@ -101,6 +102,9 @@ public final class ClientFilter {
             Entry e = project.get().items().get(RowOverlay.itemId(entry));
             if (partOnly && e == null) {
                 continue; // belongs to another part of the schematic
+            }
+            if (zone.isPresent() && !zone.get().needs(RowOverlay.itemId(entry))) {
+                continue; // not needed in the zone you chose
             }
             if (current.matches(e, self, person)) {
                 result.add(entry);

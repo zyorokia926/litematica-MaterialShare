@@ -236,6 +236,94 @@ public final class StorageTracker {
     }
 
     /** Counts the chests of every loaded chunk the project's boxes reach into. */
+    /** Every storage block in the project's boxes (loaded chunks only) that holds the item, with how many. */
+    static List<dev.materialshare.common.Packets.Spot> find(MinecraftServer server, Project project, String itemId) {
+        List<dev.materialshare.common.Packets.Spot> spots = new ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (Area area : project.storage().areas()) {
+            ServerWorld world = dev.materialshare.McCompat.world(server, area.dimension());
+            if (world == null) {
+                continue;
+            }
+            for (int cx = area.minX() >> 4; cx <= area.maxX() >> 4; cx++) {
+                for (int cz = area.minZ() >> 4; cz <= area.maxZ() >> 4; cz++) {
+                    WorldChunk chunk = seen.add(Storage.chunkKey(area.dimension(), cx, cz))
+                            ? world.getChunkManager().getWorldChunk(cx, cz) : null;
+                    if (chunk == null) {
+                        continue;
+                    }
+                    for (Map.Entry<BlockPos, BlockEntity> e : chunk.getBlockEntities().entrySet()) {
+                        BlockPos pos = e.getKey();
+                        if (!isStorage(e.getValue()) || !project.storage().contains(area.dimension(), pos.getX(), pos.getY(), pos.getZ())) {
+                            continue;
+                        }
+                        Map<String, Integer> counts = new LinkedHashMap<>();
+                        countBlock(e.getValue(), counts, null);
+                        int n = counts.getOrDefault(itemId, 0);
+                        if (n > 0 && spots.size() < dev.materialshare.common.Packets.MAX_SPOTS) {
+                            spots.add(new dev.materialshare.common.Packets.Spot(area.dimension(), pos.getX(), pos.getY(), pos.getZ(), n));
+                        }
+                    }
+                }
+            }
+        }
+        return spots;
+    }
+
+    /**
+     * Moves up to the wished amounts out of the storage chest the player has open into their inventory (as far as there
+     * is room). Only a chest inside one of the project's boxes, and only while it is open. Returns how many items moved,
+     * or -1 when no such chest is open.
+     */
+    static int takeOut(ServerPlayerEntity player, Project project, Map<String, Integer> wish) {
+        Session s = SESSIONS.get(player.getUuid());
+        if (s == null || s.handler != player.currentScreenHandler
+                || !project.storage().contains(s.dim, s.pos.getX(), s.pos.getY(), s.pos.getZ())) {
+            return -1;
+        }
+        Map<String, Integer> left = new LinkedHashMap<>(wish);
+        left.values().removeIf(n -> n == null || n <= 0);
+        int moved = 0;
+        for (Slot slot : s.handler.slots) {
+            if (left.isEmpty()) {
+                break;
+            }
+            Inventory inv = slot.inventory;
+            if (inv == player.getInventory() || !(inv instanceof BlockEntity || inv.getClass().getSimpleName().equals("DoubleInventory"))) {
+                continue;
+            }
+            ItemStack stack = slot.getStack();
+            if (stack.isEmpty()) {
+                continue;
+            }
+            String id = dev.materialshare.McCompat.itemId(stack.getItem()).toString();
+            Integer want = left.get(id);
+            if (want == null) {
+                continue;
+            }
+            int n = Math.min(want, stack.getCount());
+            ItemStack give = stack.copy();
+            give.setCount(n);
+            player.getInventory().insertStack(give);
+            int given = n - give.getCount();
+            if (given <= 0) {
+                break; // the inventory is full
+            }
+            stack.decrement(given);
+            slot.markDirty();
+            moved += given;
+            if (want - given <= 0) {
+                left.remove(id);
+            } else {
+                left.put(id, want - given);
+            }
+        }
+        if (moved > 0) {
+            s.handler.sendContentUpdates();
+        }
+        return moved;
+    }
+
     public static void scanProject(MinecraftServer server, MaterialShareState state, Project project) {
         boolean changed = false;
         java.util.Set<String> seen = new java.util.HashSet<>();

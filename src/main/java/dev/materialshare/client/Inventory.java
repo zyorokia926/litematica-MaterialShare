@@ -5,7 +5,7 @@ import java.util.Map;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
 
-/** What the player carries: hotbar, inventory, armor and off hand, counted per item id. */
+/** What the player has: hotbar, inventory, armor and off hand (and the ender chest), counted per item id. */
 final class Inventory {
     private Inventory() {
     }
@@ -19,6 +19,13 @@ final class Inventory {
                 counts.merge(dev.materialshare.McCompat.itemId(stack.getItem()).toString(), stack.getCount(), Integer::sum);
             }
         }
+        return counts;
+    }
+
+    /** What you carry plus, when the setting is on, what lies in your ender chest. */
+    static Map<String, Integer> owned(ClientPlayerEntity player) {
+        Map<String, Integer> counts = counts(player);
+        ClientProjectCache.ender().forEach((id, n) -> counts.merge(id, n, Integer::sum));
         return counts;
     }
 

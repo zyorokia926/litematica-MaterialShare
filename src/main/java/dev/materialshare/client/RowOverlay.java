@@ -87,7 +87,12 @@ public final class RowOverlay {
         }
         String title = Lang.t("row.header");
         var project = ClientProjectCache.selected().get();
-        if (project.totalRequired() > 0) {
+        var zone = ClientProjectCache.chosenZone(project.name());
+        if (zone.isPresent()) {
+            // narrowed to a zone: its name and progress instead of the whole schematic's
+            title += "  §e" + Lang.t("row.header.zone", UiText.escapeFormat(zone.get().name()), zone.get().collected(project),
+                    zone.get().totalRequired(), zone.get().percent(project)) + "§r";
+        } else if (project.totalRequired() > 0) {
             int percent = (int) (100L * project.totalCollected() / project.totalRequired());
             title += "  " + project.totalCollected() + "/" + project.totalRequired() + " (" + percent + "%)";
         }
@@ -188,6 +193,12 @@ public final class RowOverlay {
                     // Ctrl + click on the total: everything about this item on one screen
                     playClick();
                     GuiBase.openGui(new ItemDetailScreen(MinecraftClient.getInstance().currentScreen, project, itemId));
+                    return true;
+                }
+                if (button == 0 && ClientProjectCache.storage(project).stock().getOrDefault(itemId, 0) > 0) {
+                    // a click on the total: show which storage chests hold it (again: stop)
+                    playClick();
+                    Pickup.toggle(project, itemId);
                     return true;
                 }
             }
@@ -395,6 +406,16 @@ public final class RowOverlay {
             String stacks = dev.materialshare.common.Stacks.format(stored, entry.getStack().getMaxCount(), Lang.TRANSLATOR);
             summaryTip.add("§b" + Lang.t("row.stock", stored) + (stacks.isEmpty() ? "" : " (" + stacks + ")")
                     + (inside > 0 ? "  §7" + Lang.t("row.stock.inside", inside) : ""));
+            summaryTip.add("§7" + (Pickup.active(selected.get().name(), itemId(entry)) ? Lang.t("row.find.stop") : Lang.t("row.find")));
+        }
+        var zone = ClientProjectCache.chosenZone(selected.get().name());
+        if (zone.isPresent()) {
+            int need = zone.get().requiredOf(itemId(entry));
+            summaryTip.add("§e" + Lang.t("row.zone", UiText.escapeFormat(zone.get().name()), Math.min(total, need), need));
+        }
+        int ender = ClientProjectCache.ender().getOrDefault(itemId(entry), 0);
+        if (ender > 0) {
+            summaryTip.add("§d" + Lang.t("row.ender", ender));
         }
         if (Configs.Generic.SHOW_DELIVERY.getBooleanValue() && e.deliveredTotal() > 0) {
             summaryTip.add(Lang.t("row.delivered", e.deliveredTotal(), total));

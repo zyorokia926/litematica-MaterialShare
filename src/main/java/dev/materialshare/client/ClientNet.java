@@ -27,6 +27,8 @@ public final class ClientNet implements ClientModInitializer {
         ticks.register(ProjectNames::tick);
         ticks.register(Notifier::tick);
         ticks.register(Importer::tick);
+        ticks.register(Pickup::tick);
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register(Pickup::onScreenInit);
         net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register(HudOverlay::render);
         net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.LAST.register(StorageRender::render);
         dev.materialshare.McClientCompat.registerCommands();
@@ -131,6 +133,21 @@ public final class ClientNet implements ClientModInitializer {
         dev.materialshare.McClientNet.receive(Packets.STORAGE, (client, handler, buf, sender) -> {
             Packets.StorageData data = Packets.readStorage(buf);
             client.execute(() -> ClientProjectCache.setStorage(data));
+        });
+
+        dev.materialshare.McClientNet.receive(Packets.FOUND, (client, handler, buf, sender) -> {
+            Packets.Found found = Packets.readFound(buf);
+            client.execute(() -> Pickup.onFound(found));
+        });
+
+        dev.materialshare.McClientNet.receive(Packets.ZONES, (client, handler, buf, sender) -> {
+            Packets.ZoneList list = Packets.readZones(buf);
+            client.execute(() -> ClientProjectCache.setZones(list));
+        });
+
+        dev.materialshare.McClientNet.receive(Packets.ENDER, (client, handler, buf, sender) -> {
+            Map<String, Integer> counts = Packets.readCounts(buf);
+            client.execute(() -> ClientProjectCache.setEnder(counts));
         });
 
         dev.materialshare.McClientNet.receive(Packets.ACTIVITY, (client, handler, buf, sender) -> {
@@ -422,6 +439,32 @@ public final class ClientNet implements ClientModInitializer {
         buf.writeString(project, Packets.MAX_STRING);
         buf.writeVarInt(index);
         dev.materialshare.McClientNet.send(Packets.STORAGE_REMOVE, buf);
+    }
+
+    static void sendFind(String project, String itemId) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(project, Packets.MAX_STRING);
+        buf.writeString(itemId, Packets.MAX_STRING);
+        dev.materialshare.McClientNet.send(Packets.FIND, buf);
+    }
+
+    static void sendTake(String project, Map<String, Integer> counts) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        Packets.writeImport(buf, project, counts);
+        dev.materialshare.McClientNet.send(Packets.TAKE, buf);
+    }
+
+    static void sendZoneAdd(String project, dev.materialshare.common.Zone zone) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        Packets.writeZoneAdd(buf, project, zone);
+        dev.materialshare.McClientNet.send(Packets.ZONE_ADD, buf);
+    }
+
+    static void sendZoneRemove(String project, String zone) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(project, Packets.MAX_STRING);
+        buf.writeString(zone, Packets.MAX_STRING);
+        dev.materialshare.McClientNet.send(Packets.ZONE_REMOVE, buf);
     }
 
     static void requestActivity(String project) {

@@ -45,6 +45,7 @@ public final class Project {
     public static final int MAX_SURPLUS_COUNT = 1_000_000;
     private boolean archived;
     private final Storage storage = new Storage();
+    private final java.util.List<Zone> zones = new java.util.ArrayList<>();
     /** When each player last did something in this project (milliseconds); for the "not moving" hint. */
     private final Map<UUID, Long> activity = new LinkedHashMap<>();
 
@@ -185,6 +186,32 @@ public final class Project {
         return storage;
     }
 
+    public java.util.List<Zone> zones() {
+        return zones;
+    }
+
+    /** Adds a zone, or replaces the one with the same name. False when it is invalid or the list is full. */
+    public boolean putZone(Zone zone) {
+        if (!zone.valid()) {
+            return false;
+        }
+        for (int i = 0; i < zones.size(); i++) {
+            if (zones.get(i).name().equals(zone.name())) {
+                zones.set(i, zone);
+                return true;
+            }
+        }
+        if (zones.size() >= Zone.MAX_ZONES) {
+            return false;
+        }
+        zones.add(zone);
+        return true;
+    }
+
+    public boolean removeZone(String name) {
+        return zones.removeIf(z -> z.name().equals(name));
+    }
+
     public Map<UUID, Long> activity() {
         return activity;
     }
@@ -296,6 +323,7 @@ public final class Project {
             }
             copy.items.put(e.getKey(), to);
         }
+        copy.zones.addAll(zones);
         if (everything) {
             copy.note = note;
             copy.archived = archived;

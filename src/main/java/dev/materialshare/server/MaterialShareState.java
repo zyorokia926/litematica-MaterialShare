@@ -139,6 +139,23 @@ public class MaterialShareState extends PersistentState {
             activity.add(c);
         });
         p.put("activity", activity);
+        NbtList zones = new NbtList();
+        for (dev.materialshare.common.Zone z : project.zones()) {
+            NbtCompound c = new NbtCompound();
+            c.putString("name", z.name());
+            c.putInt("from", z.fromLayer());
+            c.putInt("to", z.toLayer());
+            NbtList items = new NbtList();
+            z.required().forEach((id, n) -> {
+                NbtCompound i = new NbtCompound();
+                i.putString("id", id);
+                i.putInt("n", n);
+                items.add(i);
+            });
+            c.put("items", items);
+            zones.add(c);
+        }
+        p.put("zones", zones);
         p.put("items", itemsToNbt(project.items()));
         p.put("removed", itemsToNbt(project.removed()));
         return p;
@@ -202,6 +219,15 @@ public class MaterialShareState extends PersistentState {
         for (NbtElement ae : p.getList("activity", NbtElement.COMPOUND_TYPE)) {
             NbtCompound ac = (NbtCompound) ae;
             project.activity().put(ac.getUuid("player"), ac.getLong("t"));
+        }
+        for (NbtElement ze : p.getList("zones", NbtElement.COMPOUND_TYPE)) {
+            NbtCompound zc = (NbtCompound) ze;
+            Map<String, Integer> counts = new LinkedHashMap<>();
+            for (NbtElement ie : zc.getList("items", NbtElement.COMPOUND_TYPE)) {
+                NbtCompound ic = (NbtCompound) ie;
+                counts.put(ic.getString("id"), ic.getInt("n"));
+            }
+            project.putZone(dev.materialshare.common.Zone.of(zc.getString("name"), zc.getInt("from"), zc.getInt("to"), counts));
         }
         itemsFromNbt(p.getList("items", NbtElement.COMPOUND_TYPE), project.items());
         itemsFromNbt(p.getList("removed", NbtElement.COMPOUND_TYPE), project.removed());

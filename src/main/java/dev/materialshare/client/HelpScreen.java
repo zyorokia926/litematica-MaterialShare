@@ -36,7 +36,8 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
             new Page("tools", List.of("tools0", "tools1")),
             new Page("missing", List.of("missing")),
             new Page("totals", List.of("totals")),
-            new Page("storage", List.of("storage_chat", "storage", "stock", "storage_world")),
+            new Page("storage", List.of("storage_chat", "storage", "stock", "storage_world", "find", "take")),
+            new Page("zone", List.of("zone", "zone_list")),
             new Page("stats", List.of("stats", "history")),
             new Page("items", List.of("iteminfo")),
             new Page("surplus", List.of("surplus")),
@@ -51,7 +52,7 @@ public class HelpScreen extends GuiBase implements NoWheelClick {
      * {@link dev.materialshare.common.ProtocolCheck#PROTOCOL_VERSION}; a test fails until the pages were reviewed
      * (and new pages or pictures added) and this number is raised to match.
      */
-    static final int REVIEWED_PROTOCOL = 16;
+    static final int REVIEWED_PROTOCOL = 19;
 
     private static final int NAV_Y = 28;
     private static final int TOP = 54;

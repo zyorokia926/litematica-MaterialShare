@@ -44,6 +44,10 @@ public final class McCompat {
         return new net.minecraft.text.TranslatableText(key);
     }
 
+    public static net.minecraft.text.MutableText translatable(String key, Object... args) {
+        return new net.minecraft.text.TranslatableText(key, args);
+    }
+
     public static <T extends net.minecraft.world.PersistentState> T persistentState(net.minecraft.world.PersistentStateManager manager,
             java.util.function.Function<net.minecraft.nbt.NbtCompound, T> reader, java.util.function.Supplier<T> factory, String key) {
         return manager.getOrCreate(reader, factory, key);

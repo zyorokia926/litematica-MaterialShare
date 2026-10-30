@@ -38,6 +38,7 @@ public final class ServerNet {
         registerLoginCheck();
         registerPlayerSources();
         StorageTracker.register();
+        EnderTracker.register();
         registerStorage();
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -45,6 +46,7 @@ public final class ServerNet {
             LAST_LOOKUP.remove(handler.getPlayer().getUuid());
             LAST_PLAYERS_REQUEST.remove(handler.getPlayer().getUuid());
             LAST_FEED.remove(handler.getPlayer().getUuid());
+            LAST_FIND.remove(handler.getPlayer().getUuid());
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -540,10 +542,16 @@ public final class ServerNet {
                 Packets.writeStorage(storage, project);
                 send(player, Packets.STORAGE, storage);
             }
+            if (!project.zones().isEmpty()) {
+                PacketByteBuf zones = new PacketByteBuf(Unpooled.buffer());
+                Packets.writeZones(zones, project);
+                send(player, Packets.ZONES, zones);
+            }
         }
     }
 
     private static final Map<UUID, Long> LAST_ACTIVITY = new HashMap<>();
+    private static final Map<UUID, Long> LAST_FIND = new HashMap<>();
 
     private static void registerStorage() {
         dev.materialshare.McNet.receive(Packets.STORAGE_ADD, (server, player, handler, buf, sender) -> {
@@ -577,6 +585,65 @@ public final class ServerNet {
                 });
             });
         });
+        dev.materialshare.McNet.receive(Packets.FIND, (server, player, handler, buf, sender) -> {
+            String name = buf.readString(Packets.MAX_STRING);
+            String itemId = buf.readString(Packets.MAX_STRING);
+            server.execute(() -> {
+                long now = System.currentTimeMillis();
+                Long last = LAST_FIND.get(player.getUuid());
+                if (last != null && now - last < 500) {
+                    return;
+                }
+                LAST_FIND.put(player.getUuid(), now);
+                MaterialShareState.get(server).registry().get(name).ifPresent(project -> {
+                    PacketByteBuf out = new PacketByteBuf(Unpooled.buffer());
+                    Packets.writeFound(out, new Packets.Found(name, itemId, StorageTracker.find(server, project, itemId)));
+                    send(player, Packets.FOUND, out);
+                });
+            });
+        });
+        dev.materialshare.McNet.receive(Packets.TAKE, (server, player, handler, buf, sender) -> {
+            Packets.Import take = Packets.readImport(buf);
+            server.execute(() -> MaterialShareState.get(server).registry().get(take.project()).ifPresent(project -> {
+                int moved = StorageTracker.takeOut(player, project, take.counts());
+                if (moved < 0) {
+                    tell(player, "litematica_materialshare.take.notopen");
+                } else if (moved == 0) {
+                    tell(player, "litematica_materialshare.take.none");
+                } else {
+                    player.sendMessage(dev.materialshare.McCompat.translatable("litematica_materialshare.take.done", moved), true);
+                }
+            }));
+        });
+        dev.materialshare.McNet.receive(Packets.ZONE_ADD, (server, player, handler, buf, sender) -> {
+            Packets.ZoneAdd add = Packets.readZoneAdd(buf);
+            server.execute(() -> {
+                MaterialShareState state = MaterialShareState.get(server);
+                state.registry().get(add.project()).ifPresent(project -> {
+                    if (!project.putZone(add.zone())) {
+                        tell(player, "litematica_materialshare.zone.refused");
+                        return;
+                    }
+                    project.touch(player.getUuid(), System.currentTimeMillis());
+                    state.markDirty();
+                    broadcastZones(server, project);
+                });
+            });
+        });
+        dev.materialshare.McNet.receive(Packets.ZONE_REMOVE, (server, player, handler, buf, sender) -> {
+            String name = buf.readString(Packets.MAX_STRING);
+            String zone = buf.readString(Packets.MAX_STRING);
+            server.execute(() -> {
+                MaterialShareState state = MaterialShareState.get(server);
+                state.registry().get(name).ifPresent(project -> {
+                    if (project.removeZone(zone)) {
+                        project.touch(player.getUuid(), System.currentTimeMillis());
+                        state.markDirty();
+                        broadcastZones(server, project);
+                    }
+                });
+            });
+        });
         dev.materialshare.McNet.receive(Packets.ACTIVITY_REQUEST, (server, player, handler, buf, sender) -> {
             String name = buf.readString(Packets.MAX_STRING);
             server.execute(() -> {
@@ -593,6 +660,10 @@ public final class ServerNet {
                 });
             });
         });
+    }
+
+    static void broadcastZones(MinecraftServer server, Project project) {
+        broadcast(server, Packets.ZONES, out -> Packets.writeZones(out, project));
     }
 
     public static void broadcastStorage(MinecraftServer server, Project project) {
@@ -817,6 +888,9 @@ public final class ServerNet {
                     state.markDirty();
                     broadcast(server, Packets.PROJECT_DELETED, out -> out.writeString(from, Packets.MAX_STRING));
                     broadcastProject(server, project);
+                    if (!project.zones().isEmpty()) {
+                        broadcastZones(server, project);
+                    }
                 });
             });
         });
@@ -836,6 +910,9 @@ public final class ServerNet {
                     record(project, player.getUuid(), History.Kind.CLONED, "", null, project.items().size());
                     state.markDirty();
                     broadcastProject(server, project);
+                    if (!project.zones().isEmpty()) {
+                        broadcastZones(server, project);
+                    }
                 });
             });
         });

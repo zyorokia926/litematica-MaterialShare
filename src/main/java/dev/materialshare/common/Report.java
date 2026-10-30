@@ -28,6 +28,42 @@ public final class Report {
      */
     public static String format(Project project, Function<UUID, String> playerName, Function<String, String> itemName,
             Translator tr, Style style, boolean unclaimedOnly, LocalDate today) {
+        List<String> lines = lines(project, playerName, itemName, tr, style, unclaimedOnly);
+        if (style == Style.DISCORD) {
+            return limit(lines, tr);
+        }
+        return String.join("\n", lines) + "\n";
+    }
+
+    /**
+     * The whole Discord report, cut into messages that each fit Discord's limit (whole lines only), each ending with
+     * "(1/3)" and so on. Nothing is left out, however long the list is.
+     */
+    public static List<String> discordParts(Project project, Function<UUID, String> playerName,
+            Function<String, String> itemName, Translator tr) {
+        List<String> lines = lines(project, playerName, itemName, tr, Style.DISCORD, false);
+        List<StringBuilder> parts = new ArrayList<>();
+        StringBuilder part = new StringBuilder();
+        // room for the "(12/12)" line at the end of each part
+        int room = DISCORD_LIMIT - 12;
+        for (String line : lines) {
+            String l = line.length() > room ? line.substring(0, room) : line;
+            if (part.length() > 0 && part.length() + l.length() + 1 > room) {
+                parts.add(part);
+                part = new StringBuilder();
+            }
+            part.append(l).append('\n');
+        }
+        parts.add(part);
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < parts.size(); i++) {
+            out.add(parts.size() == 1 ? parts.get(i).toString() : parts.get(i) + "(" + (i + 1) + "/" + parts.size() + ")\n");
+        }
+        return out;
+    }
+
+    private static List<String> lines(Project project, Function<UUID, String> playerName, Function<String, String> itemName,
+            Translator tr, Style style, boolean unclaimedOnly) {
         boolean discord = style == Style.DISCORD;
         List<String> lines = new ArrayList<>();
         int collected = project.totalCollected();
@@ -85,10 +121,7 @@ public final class Report {
             }
             lines.add(line);
         }
-        if (discord) {
-            return limit(lines, tr);
-        }
-        return String.join("\n", lines) + "\n";
+        return lines;
     }
 
     /** Keeps whole lines within Discord's limit and says how many were left out. */

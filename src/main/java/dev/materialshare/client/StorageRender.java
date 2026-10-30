@@ -61,7 +61,8 @@ public final class StorageRender {
             }
         }
         boolean marks = StorageMarks.dimension().equals(dim) && (StorageMarks.a() != null || StorageMarks.b() != null);
-        if (areas.isEmpty() && !marks) {
+        List<BlockPos> found = Pickup.shown(dim);
+        if (areas.isEmpty() && !marks && found.isEmpty()) {
             return;
         }
         MatrixStack m = ctx.matrixStack();
@@ -92,6 +93,11 @@ public final class StorageRender {
                 corner(m, buf, StorageMarks.a(), alpha);
                 corner(m, buf, StorageMarks.b(), alpha);
             }
+            for (BlockPos p : found) {
+                // the chests that hold the material being found: gold, a little larger than the block
+                WorldRenderer.drawBox(m, buf, p.getX() - 0.05, p.getY() - 0.05, p.getZ() - 0.05, p.getX() + 1.05,
+                        p.getY() + 1.05, p.getZ() + 1.05, 1f, 0.85f, 0.1f, 1f);
+            }
             Tessellator.getInstance().draw();
         }
         // a faint fill, so the box reads as a coloured volume and not only as thin lines
@@ -112,6 +118,17 @@ public final class StorageRender {
             k++;
         }
         Tessellator.getInstance().draw();
+        if (!found.isEmpty()) {
+            // the chests that hold the material being found: a gold fill seen through walls
+            RenderSystem.disableDepthTest();
+            BufferBuilder gold = Tessellator.getInstance().getBuffer();
+            gold.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            for (BlockPos p : found) {
+                fillBox(m, gold, p.getX(), p.getY(), p.getZ(), p.getX() + 1, p.getY() + 1, p.getZ() + 1, 1f, 0.85f, 0.1f, 0.4f);
+            }
+            Tessellator.getInstance().draw();
+            RenderSystem.enableDepthTest();
+        }
         RenderSystem.depthMask(true);
         RenderSystem.enableCull();
         RenderSystem.disableBlend();

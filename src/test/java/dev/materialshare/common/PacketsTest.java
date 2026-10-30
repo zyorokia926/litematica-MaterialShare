@@ -34,6 +34,17 @@ class PacketsTest {
     }
 
     @Test
+    void countsRoundTrip() {
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        Map<String, Integer> counts = new java.util.LinkedHashMap<>(Map.of("minecraft:stone", 1728, "minecraft:glass", 3));
+        Packets.writeCounts(buf, counts);
+        assertEquals(counts, Packets.readCounts(buf));
+        PacketByteBuf empty = new PacketByteBuf(Unpooled.buffer());
+        Packets.writeCounts(empty, Map.of());
+        assertTrue(Packets.readCounts(empty).isEmpty());
+    }
+
+    @Test
     void projectRoundTrip() {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
         Packets.writeProject(buf, sample());

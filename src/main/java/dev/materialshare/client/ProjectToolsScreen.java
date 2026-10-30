@@ -63,6 +63,8 @@ class ProjectToolsScreen extends GridScreen {
                 Lang.t("act.surplus.tip"), () -> openGui(new SurplusScreen(me, p.name(), 0, "")), need));
         view.add(Cell.when(has, Lang.t("act.storage", has ? ClientProjectCache.storage(p.name()).areas().size() : 0),
                 Lang.t("act.storage.tip"), () -> openGui(new StorageScreen(me, p.name(), 0, "")), need));
+        view.add(Cell.when(has, Lang.t("act.zones", has ? ClientProjectCache.zones(p.name()).size() : 0),
+                Lang.t("act.zones.tip"), () -> openGui(new ZoneScreen(materialList, me, p.name(), 0, "")), need));
         view.add(Cell.when(has, Lang.t("act.breakdown"), Lang.t("act.breakdown.tip"), () -> openGui(new BreakdownScreen(me, p.name(), 0, "")), need));
         view.add(Cell.of(Lang.t("overview.mine"), Lang.t("overview.mine.tip"), () -> openGui(new MyAssignmentsScreen(me, null, 0, ""))));
 
@@ -70,6 +72,9 @@ class ProjectToolsScreen extends GridScreen {
         copy.add(Cell.when(has, Lang.t("act.report"), Lang.t("act.report.tip"), () -> ProjectCopy.plain(p), need));
         copy.add(Cell.when(has, Lang.t("act.discord"), Lang.t("act.discord.tip"), () -> ProjectCopy.discord(p), need));
         copy.add(Cell.when(has, Lang.t("act.recruit"), Lang.t("act.recruit.tip"), () -> ProjectCopy.recruit(p), need));
+        copy.add(Cell.when(has, Lang.t("act.discordparts"), Lang.t("act.discordparts.tip"), () -> ProjectCopy.discordParts(p), need));
+        copy.add(Cell.when(has, Lang.t("act.csv"), Lang.t("act.csv.tip"), () -> ProjectCopy.csv(p), need));
+        copy.add(Cell.of(Lang.t("act.backup"), Lang.t("act.backup.tip"), () -> ProjectCopy.backup(materialList)));
 
         List<Cell> manage = new ArrayList<>();
         manage.add(Cell.when(has, Lang.t("act.note"), Lang.t("act.note.tip"), () -> ProjectActions.editNote(me, p), need));

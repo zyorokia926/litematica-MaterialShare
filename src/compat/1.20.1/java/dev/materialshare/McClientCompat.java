@@ -129,4 +129,9 @@ public final class McClientCompat {
         RenderSystem.getModelViewStack().pop();
         RenderSystem.applyModelViewMatrix();
     }
+
+    /** A vanilla button (for adding to a vanilla screen). */
+    public static net.minecraft.client.gui.widget.ButtonWidget button(int x, int y, int w, int h, String text, Runnable onPress) {
+        return net.minecraft.client.gui.widget.ButtonWidget.builder(dev.materialshare.McCompat.literal(text), b -> onPress.run()).dimensions(x, y, w, h).build();
+    }
 }

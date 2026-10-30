@@ -116,7 +116,7 @@ public final class Importer {
         if (project.isEmpty() || self == null) {
             return;
         }
-        java.util.Map<String, Integer> carried = Inventory.counts(client.player);
+        java.util.Map<String, Integer> carried = Inventory.owned(client.player);
         java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
         String name = project.get().name();
         boolean first = !name.equals(lastProject);
@@ -157,7 +157,7 @@ public final class Importer {
             }
             return 0;
         }
-        java.util.Map<String, Integer> carried = Inventory.counts(player);
+        java.util.Map<String, Integer> carried = Inventory.owned(player);
         List<dev.materialshare.common.Assignments.Assignment> claims = new ArrayList<>();
         java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
         project.get().items().forEach((id, e) -> {
@@ -209,7 +209,7 @@ public final class Importer {
             client.player.sendMessage(dev.materialshare.McCompat.literal(Lang.t("held.already", name)), true);
             return;
         }
-        int have = Inventory.counts(client.player).getOrDefault(id, 0);
+        int have = Inventory.owned(client.player).getOrDefault(id, 0);
         ClientNet.sendClaim(project.get().name(), id, self, true);
         if (have > 0) {
             ClientNet.sendImport(project.get().name(), java.util.Map.of(id, Math.min(have, e.required())));

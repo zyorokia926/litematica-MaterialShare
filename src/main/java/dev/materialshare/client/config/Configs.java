@@ -54,13 +54,16 @@ public final class Configs {
         public static final ConfigBoolean AUTO_IMPORT = new ConfigBoolean("materialshareAutoImport", true,
                 "Keeps your collected counts in step with what you carry, even while no screen is open (never lowers them).",
                 "Update my collected counts automatically");
+        public static final ConfigBoolean COUNT_ENDER = new ConfigBoolean("materialshareCountEnder", true,
+                "Also counts what lies in your ender chest (shulker boxes inside included) as what you have: in the tooltips, the automatic counts and \"take what I carry\".",
+                "Count my ender chest too");
         public static final ConfigInteger WHEEL_STEP = new ConfigInteger("materialshareWheelStep", 1, 1, 64,
                 "Amount changed per wheel step over an assignee.");
         public static final ConfigInteger WHEEL_STEP_SHIFT = new ConfigInteger("materialshareWheelStepShift", 64, 1, 3456,
                 "Amount changed per wheel step with Shift held (64 = one stack).");
 
         public static final ImmutableList<IConfigBase> OPTIONS = ImmutableList.of(SHOW_OVERLAY, SHOW_FACES,
-                SHOW_TOOLTIPS, HIGHLIGHT_DONE_ROWS, CLICK_SOUNDS, AUTO_SELECT_PROJECT, NOTIFY_DONE, NOTIFY_CHAT, NOTIFY_ONLY_MINE, NOTIFY_ASSIGNED, SHOW_DELIVERY, WHEEL_NEEDS_CTRL, SHOW_INTRO, SHOW_HUD, HUD_LINES, SHOW_STORAGE, SHOW_STACKS, AUTO_IMPORT, WHEEL_STEP,
+                SHOW_TOOLTIPS, HIGHLIGHT_DONE_ROWS, CLICK_SOUNDS, AUTO_SELECT_PROJECT, NOTIFY_DONE, NOTIFY_CHAT, NOTIFY_ONLY_MINE, NOTIFY_ASSIGNED, SHOW_DELIVERY, WHEEL_NEEDS_CTRL, SHOW_INTRO, SHOW_HUD, HUD_LINES, SHOW_STORAGE, SHOW_STACKS, AUTO_IMPORT, COUNT_ENDER, WHEEL_STEP,
                 WHEEL_STEP_SHIFT);
 
         private Generic() {

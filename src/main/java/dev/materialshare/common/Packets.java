@@ -62,6 +62,19 @@ public final class Packets {
     public static final Identifier STORAGE = id("storage");
     public static final Identifier ACTIVITY = id("activity");
     public static final Identifier ACTIVITY_REQUEST = id("activity_request");
+    /** Server to one player: what lies in their own ender chest (shulker boxes inside included), sent when it changes. */
+    public static final Identifier ENDER = id("ender");
+    /** project + one zone (a zone with the same name is replaced). */
+    public static final Identifier ZONE_ADD = id("zone_add");
+    /** project + zone name. */
+    public static final Identifier ZONE_REMOVE = id("zone_remove");
+    /** Server to everybody: project + all its zones. */
+    public static final Identifier ZONES = id("zones");
+    /** project + item id: where in the storage boxes the item lies (answered with FOUND). */
+    public static final Identifier FIND = id("find");
+    public static final Identifier FOUND = id("found");
+    /** project + item counts: take up to these amounts out of the storage chest the sender has open. */
+    public static final Identifier TAKE = id("take");
 
     /** Entries per BULK_CLAIM / BULK_COLLECTED packet, so one packet stays far below the 32767-byte client limit. */
     public static final int BULK_CHUNK = 200;
@@ -308,6 +321,27 @@ public final class Packets {
         return new Import(project, counts);
     }
 
+    /** Item id and count, at most {@link Project#MAX_ITEMS} kinds (an ender chest holds far fewer). */
+    public static void writeCounts(PacketByteBuf buf, Map<String, Integer> counts) {
+        int n = Math.min(counts.size(), Project.MAX_ITEMS);
+        buf.writeVarInt(n);
+        counts.entrySet().stream().limit(n).forEach(c -> {
+            buf.writeString(c.getKey(), MAX_STRING);
+            buf.writeVarInt(c.getValue());
+        });
+    }
+
+    public static Map<String, Integer> readCounts(PacketByteBuf buf) {
+        int n = buf.readVarInt();
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        if (n >= 0 && n <= Project.MAX_ITEMS) {
+            for (int i = 0; i < n; i++) {
+                counts.put(buf.readString(MAX_STRING), buf.readVarInt());
+            }
+        }
+        return counts;
+    }
+
     /** One line of the "recent activity" list: an event and the project it happened in. */
     public record FeedEntry(String project, History.Event event) {
     }
@@ -439,6 +473,88 @@ public final class Packets {
     public static AreaAdd readAreaAdd(PacketByteBuf buf) {
         String project = buf.readString(MAX_STRING);
         return new AreaAdd(project, readArea(buf));
+    }
+
+    public static void writeZone(PacketByteBuf buf, Zone zone) {
+        buf.writeString(zone.name(), MAX_STRING);
+        buf.writeVarInt(zone.fromLayer());
+        buf.writeVarInt(zone.toLayer());
+        writeCounts(buf, zone.required());
+    }
+
+    public static Zone readZone(PacketByteBuf buf) {
+        String name = buf.readString(MAX_STRING);
+        int from = buf.readVarInt();
+        int to = buf.readVarInt();
+        return Zone.of(name, from, to, readCounts(buf));
+    }
+
+    /** One storage block that holds an item, and how many (what lies inside shulker boxes counted too). */
+    public record Spot(String dimension, int x, int y, int z, int count) {
+    }
+
+    public record Found(String project, String itemId, java.util.List<Spot> spots) {
+    }
+
+    /** At most this many places are sent back; the nearest ones are what matters. */
+    public static final int MAX_SPOTS = 64;
+
+    public static void writeFound(PacketByteBuf buf, Found found) {
+        buf.writeString(found.project(), MAX_STRING);
+        buf.writeString(found.itemId(), MAX_STRING);
+        int n = Math.min(found.spots().size(), MAX_SPOTS);
+        buf.writeVarInt(n);
+        for (int i = 0; i < n; i++) {
+            Spot s = found.spots().get(i);
+            buf.writeString(s.dimension(), MAX_STRING);
+            buf.writeInt(s.x());
+            buf.writeInt(s.y());
+            buf.writeInt(s.z());
+            buf.writeVarInt(s.count());
+        }
+    }
+
+    public static Found readFound(PacketByteBuf buf) {
+        String project = buf.readString(MAX_STRING);
+        String itemId = buf.readString(MAX_STRING);
+        int n = Math.min(buf.readVarInt(), MAX_SPOTS);
+        java.util.List<Spot> spots = new java.util.ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            spots.add(new Spot(buf.readString(MAX_STRING), buf.readInt(), buf.readInt(), buf.readInt(), buf.readVarInt()));
+        }
+        return new Found(project, itemId, spots);
+    }
+
+    public record ZoneAdd(String project, Zone zone) {
+    }
+
+    public static void writeZoneAdd(PacketByteBuf buf, String project, Zone zone) {
+        buf.writeString(project, MAX_STRING);
+        writeZone(buf, zone);
+    }
+
+    public static ZoneAdd readZoneAdd(PacketByteBuf buf) {
+        String project = buf.readString(MAX_STRING);
+        return new ZoneAdd(project, readZone(buf));
+    }
+
+    public record ZoneList(String project, java.util.List<Zone> zones) {
+    }
+
+    public static void writeZones(PacketByteBuf buf, Project project) {
+        buf.writeString(project.name(), MAX_STRING);
+        buf.writeVarInt(project.zones().size());
+        project.zones().forEach(z -> writeZone(buf, z));
+    }
+
+    public static ZoneList readZones(PacketByteBuf buf) {
+        String name = buf.readString(MAX_STRING);
+        int n = Math.min(buf.readVarInt(), Zone.MAX_ZONES);
+        java.util.List<Zone> zones = new java.util.ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            zones.add(readZone(buf));
+        }
+        return new ZoneList(name, zones);
     }
 
     /** The boxes of a project and what the chests in them hold, per item. */

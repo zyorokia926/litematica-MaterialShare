@@ -27,7 +27,7 @@
 
 | 機能 | ひとこと | 詳しく |
 |---|---|---|
-| はじめに | どのようなアドオンか | [↓](#f-ja-start) |
+| はじめに | 何ができるアドオンか、必要なもの | [↓](#f-ja-start) |
 | 設計図を共有する | 設計図やその一部を、みんなで管理できるようにする | [↓](#f-ja-share) |
 | 担当を決める | 「担当」ボタンと「＋」ボタン | [↓](#f-ja-claim) |
 | 集めた数を記録する | ホイール、クリック、持ち物の取り込み | [↓](#f-ja-amounts) |
@@ -38,6 +38,7 @@
 | 足りない素材 | まだ集まっていない素材、担当のいないもの | [↓](#f-ja-missing) |
 | 自分の合計 | 自分の担当を素材ごとに合計 | [↓](#f-ja-totals) |
 | 保管場所と納品 | チェストの範囲を登録し、中身と納品者を記録する | [↓](#f-ja-storage) |
+| ゾーン(段ごとに集める) | 設計図を高さで区切り、選んだゾーンの素材だけを出す | [↓](#f-ja-zone) |
 | 統計と履歴 | 誰がどれだけ集めたか、誰が何をしたか | [↓](#f-ja-stats) |
 | 素材の設定 | 優先、代用のメモ、分担、削除 | [↓](#f-ja-items) |
 | 余りを共有する | 持て余している素材を、みんなに知らせる | [↓](#f-ja-surplus) |
@@ -174,8 +175,8 @@
 >
 > - マテリアルリストの「ツール」には、機能が4つのタブに分かれて入っています。
 > - 【担当】一括割り当て、担当のリセット、持ち物から担当にする、持ち物の取り込み、納品、素材の設定。
-> - 【表示】自分の合計、足りない素材、統計、履歴、最近の動き、余り、保管場所、原材料、自分の担当一覧、使い方。
-> - 【コピー】進み具合を文章でコピー、Discord 用にコピー、足りない素材を「手伝って」の形でコピー。
+> - 【表示】自分の合計、足りない素材、統計、履歴、最近の動き、余り、保管場所、ゾーン、原材料、自分の担当一覧、使い方。
+> - 【コピー】進み具合を文章でコピー、Discord 用にコピー、足りない素材を「手伝って」の形でコピー、Discord 用(全部、分けて)、CSV に書き出す、設計図のバックアップ。CSV は、ゲームのフォルダの materialshare/exports に、バックアップは materialshare/backups に、日付つきの名前で保存され、場所がチャットに出ます。
 > - 【管理】メモ、設計図から更新、複製、名前の変更、アーカイブ、ゴミ箱、別名で共有、設定。
 >
 > </details>
@@ -221,6 +222,8 @@
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/storage.png" width="640" alt="保管場所と納品 (storage)">
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/stock.png" width="640" alt="保管場所と納品 (stock)">
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/storage_world.png" width="640" alt="保管場所と納品 (storage_world)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/find.png" width="640" alt="保管場所と納品 (find)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/take.png" width="640" alt="保管場所と納品 (take)">
 >
 > - チェストを置いてある場所を、プロジェクトに教えられます。範囲は最大16か所まで登録でき、離れていても構いません。
 > 1. 範囲の一つの角を見て「保管場所の角A」のキー、反対の角を見て「角B」のキーを押します(キーは設定のホットキーで決めます)。
@@ -228,7 +231,26 @@
 > - 登録した範囲は、ゲーム内に色つきの枠で表示されます。選んでいる設計図の範囲だけが出て、設計図を切り替えると表示も切り替わります(設定でオフにできます)。
 > - すでに素材が入っているチェストを範囲に入れた場合も、その中身が数えられます。シュルカーボックスの中の素材も数えられ、「中身」の画面には「石 ×200 (3スタック + 8個)」のように、スタックでも表示されます。
 > - 自分が担当している素材を範囲の中のチェストに入れると、チェストを開いているあいだに「納品」として記録され、出すと減ります。シュルカーボックスごと入れた場合も、中身が納品になります。ゲーム画面の隅の残り表示と、マテリアルリストの各行(「倉庫 N」)の数も、すぐに更新されます。ホッパーなど、人の操作でない出し入れは、中身の数にだけ反映されます。
-> - 対象のブロックは、チェスト、トラップチェスト、樽、シュルカーボックス、ホッパー、ドロッパー、ディスペンサー、醸造台、書見台(置いた本)、ジュークボックス(入れたディスク)です。エンダーチェストは場所ではなく持ち主の収納なので、エンチャントテーブルと大釜はアイテムを持たないので、対象外です。
+> - 素材を探すとき: マテリアルリストで、倉庫にある素材の行の合計(「倉庫 N」のところ)をクリックすると、その素材が入ったチェストが、壁越しに金色に光り、いちばん近いチェストまでの距離がホットバーの上に出ます。もう一度クリックすると消えます。保管場所の中でチェストを開くと、上に[必要な分を取り出す]が出ます。押すと、設計図にまだ置かれていない分から、持っている分を引いた数だけ、そのチェストから持ち物に移ります(ゾーンを選んでいるときは、そのゾーンの分だけ)。
+> - 対象のブロックは、チェスト、トラップチェスト、樽、シュルカーボックス、ホッパー、ドロッパー、ディスペンサー、醸造台、書見台(置いた本)、ジュークボックス(入れたディスク)です。エンチャントテーブルと大釜はアイテムを持たないので、対象外です。エンダーチェストは場所ではなく持ち主の収納なので、範囲には入りません。そのかわり、自分のエンダーチェストの中身(中のシュルカーボックスも)は「持っている数」に入ります。素材の行のツールチップに「エンダーチェストに N 個」と出て、集めた数の自動更新と[持ち物から担当にする]にも足されます(設定「エンダーチェストも数える」でオフにできます)。
+>
+> </details>
+
+<a id="f-ja-zone"></a>
+
+### ゾーン(段ごとに集める)
+
+> <details>
+> <summary><b>設計図を高さで区切り、選んだゾーンの素材だけを出す</b></summary>
+>
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/zone.png" width="640" alt="ゾーン(段ごとに集める) (zone)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/zone_list.png" width="640" alt="ゾーン(段ごとに集める) (zone_list)">
+>
+> - 大きな設計図を、高さ(段)で区切って、少しずつ集められます。「今夜は 1〜10 段目の土台だけ」のように使います。
+> 1. 設置した設計図のマテリアルリストで[ツール]を開き、「見る」のタブの[ゾーン (0)]を押して、、[ゾーンを追加]を押します。
+> 2. 「1-10 土台」のように、段の範囲と名前を入れます。段は、設計図のいちばん下を 1 段目として数えます(置いた場所の高さは関係ありません)。その段に要る素材が設計図から数えられ、サーバーの全員と共有されます。
+> 3. ゾーンの[選ぶ]を押すと、マテリアルリストと HUD(残り表示)が、そのゾーンに要る素材だけになります。HUD の題名にゾーンの名前と進み具合が出て、素材の行のツールチップに「ゾーン「土台」: 集めた数/必要数」が出ます。どのゾーンを選ぶかは、自分だけの設定です。[絞り込みをやめる]で全体に戻ります。
+> - 担当と集めた数は、ゾーンに分かれず、設計図全体で1つのままです。ゾーンの進み具合は、素材ごとに「集めた数(ゾーンの必要数まで)」を足して出します。ゾーンは1つの設計図に16個まで作れ、[消す]で全員から消えます。
 >
 > </details>
 
@@ -319,7 +341,7 @@
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/hudplace.png" width="640" alt="設定とホットキー (hudplace)">
 >
 > - 設定は、Litematica のメインメニューの「MaterialShare 設定」、設計図の画面の[設定]、Mod Menu から開けます。
-> - 担当の列や顔の表示、ツールチップ、完了や割り当ての通知、ホイールの増減量、納品の段階を使うか、HUD(残り表示)とその位置、保管場所の表示などを変えられます。
+> - 担当の列や顔の表示、ツールチップ、完了や割り当ての通知、ホイールの増減量、納品の段階を使うか、HUD(残り表示)とその位置、保管場所の表示、エンダーチェストも数えるか、などを変えられます。
 > - 「ホットキー」のタブでは、設定画面、設計図画面、原材料、担当列の切り替え、残り表示の切り替え、持っているアイテムを担当にする、元に戻す、絞り込みの切り替え、保管場所の角A・B、角の印を消す、使い方、のキーを決められます。
 >
 > </details>
@@ -373,6 +395,7 @@
 > | 同名の設計図を自動で選ぶ | マテリアルリストを開いたとき、設計図と同じ名前の設計図を自動で選びます。 |
 > | 完了を知らせる | 素材が揃ったとき、設計図が完成したときに、画面の隅に知らせを出します。 |
 > | 集めた数を自動で更新する | 画面を開いていなくても、持ち物に合わせて、自分が担当している素材の集めた数を増やします(減らしません)。 |
+> | エンダーチェストも数える | 自分のエンダーチェストの中身(中のシュルカーボックスも)を「持っている数」に入れます。ツールチップ、集めた数の自動更新、[持ち物から担当にする]に使います。 |
 > | ホイールの増減量 | 担当者の上でホイールを回したときに増減する数です。 |
 > | Shift + ホイールの増減量 | Shift を押しながらホイールを回したときに増減する数です(64 = 1スタック)。 |
 > | 設定画面を開く | この設定画面を開きます。 |
@@ -509,6 +532,7 @@ This add-on puts **who takes an item and how much they have collected** right in
 | Missing items | What is not collected yet, and what nobody takes | [↓](#f-en-missing) |
 | My totals | Everything you still have to collect, added up | [↓](#f-en-totals) |
 | Storage boxes | Registering chest areas; contents and who handed in | [↓](#f-en-storage) |
+| Zones (collect layer by layer) | Split the schematic by height and show only the chosen zone's items | [↓](#f-en-zone) |
 | Stats and history | Who collected how much, and who did what | [↓](#f-en-stats) |
 | Item settings | Priority, substitute notes, split and removal | [↓](#f-en-items) |
 | Spare items | Telling the others about items you have too many of | [↓](#f-en-surplus) |
@@ -645,8 +669,8 @@ Press an entry to open its explanation and pictures.
 >
 > - "Tools" in the material list holds the features in four tabs.
 > - [Assign] bulk assign, resets, take what I carry, import carried, hand in, item settings.
-> - [View] my totals, missing items, stats, history, recent activity, spare items, storage boxes, raw materials, my assignments, how to use.
-> - [Copy] copy the progress as text, copy for Discord, copy the unassigned items as a call for help.
+> - [View] my totals, missing items, stats, history, recent activity, spare items, storage boxes, zones, raw materials, my assignments, how to use.
+> - [Copy] copy the progress as text, copy for Discord, copy the unassigned items as a call for help, for Discord (all, in parts), save as CSV, back up the schematic. The CSV goes to materialshare/exports in the game folder and the backup to materialshare/backups, named with the date; the chat says where.
 > - [Manage] note, update from schematic, duplicate, rename, archive, trash, share as..., settings.
 >
 > </details>
@@ -692,6 +716,8 @@ Press an entry to open its explanation and pictures.
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/storage.png" width="640" alt="Storage boxes (storage)">
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/stock.png" width="640" alt="Storage boxes (stock)">
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/storage_world.png" width="640" alt="Storage boxes (storage_world)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/find.png" width="640" alt="Storage boxes (find)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/take.png" width="640" alt="Storage boxes (take)">
 >
 > - You can tell the project where its chests are. Up to 16 areas can be registered, and they need not touch.
 > 1. Look at one corner of the area and press the "Mark storage corner A" key, then look at the opposite corner and press the "B" key (set the keys under Hotkeys in the settings).
@@ -699,7 +725,26 @@ Press an entry to open its explanation and pictures.
 > - The registered areas are drawn in the world as coloured boxes. Only the areas of the selected schematic are drawn, and they switch when you select another schematic (this can be turned off in the settings).
 > - Chests that already hold materials when they are put into an area are counted too. What lies inside shulker boxes is counted as well, and [What is inside] also writes the amount as stacks, for example "Stone ×200 (3 stacks + 8)".
 > - When you put an item you are assigned to into a chest inside an area, it is recorded as "handed in" while the chest is open, and taking it out lowers it again. A shulker box put in counts by its contents. The list in the corner of the screen and the "stored N" in each row of the material list follow at once. Moves that no player makes, such as hoppers, only change the contents count.
-> - The blocks that count are chests, trapped chests, barrels, shulker boxes, hoppers, droppers, dispensers, brewing stands, lecterns (the book on them) and jukeboxes (the disc inside). Ender chests are not counted because they hold a player's items, not a place's, and enchanting tables and cauldrons hold no items.
+> - Finding a material: in the material list, click the total of an item that lies in the storage (where "stored N" shows). The chests that hold it light up in gold through walls, and the distance to the nearest one shows above the hotbar; click again to stop. When you open a chest inside a storage box, [Take what I need] shows above it: it moves into your inventory what the schematic still misses in the world, minus what you carry (only the chosen zone's items when a zone is chosen).
+> - The blocks that count are chests, trapped chests, barrels, shulker boxes, hoppers, droppers, dispensers, brewing stands, lecterns (the book on them) and jukeboxes (the disc inside). Enchanting tables and cauldrons are not counted because they hold no items. Ender chests hold a player's items, not a place's, so they are not part of a box. Instead, what lies in your own ender chest (shulker boxes inside included) counts as what you have: the tooltip of an item's row shows "In your ender chest: N", and it is added to the automatic collected counts and to [Take what I carry] (turn it off with the setting "Count my ender chest too").
+>
+> </details>
+
+<a id="f-en-zone"></a>
+
+### Zones (collect layer by layer)
+
+> <details>
+> <summary><b>Split the schematic by height and show only the chosen zone's items</b></summary>
+>
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/zone.png" width="640" alt="Zones (collect layer by layer) (zone)">
+> <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/zone_list.png" width="640" alt="Zones (collect layer by layer) (zone_list)">
+>
+> - Split a big schematic by height (layers) and collect it bit by bit, for example "tonight only the base, layers 1 to 10".
+> 1. In the material list of a placed schematic, open [Tools], press [Zones (0)] on the "View" tab, then press [Add a zone].
+> 2. Enter the layers and a name, for example "1-10 Base". Layer 1 is the bottom of the schematic (the height where it is placed does not matter). What those layers need is counted from the schematic and shared with everybody on the server.
+> 3. Press [Choose] on a zone: the material list and the HUD (remaining items) then show only what that zone needs. The HUD title shows the zone's name and progress, and an item's tooltip shows "Zone \"Base\": collected/needed". Which zone you choose is only for you. [Show everything] goes back to the whole schematic.
+> - Assignments and collected counts are not split by zone; they stay one for the whole schematic. A zone's progress adds up, per item, what is collected (up to what the zone needs). A schematic can have up to 16 zones; [Remove] removes one for everybody.
 >
 > </details>
 
@@ -790,7 +835,7 @@ Press an entry to open its explanation and pictures.
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/en/hudplace.png" width="640" alt="Settings and hotkeys (hudplace)">
 >
 > - The settings open from "MaterialShare settings" in Litematica's main menu, from [Settings] on the schematic screen, and from Mod Menu.
-> - You can change the assignment column and faces, tooltips, completion and assignment notices, the wheel steps, whether the hand-in step is used, the HUD (remaining items) and its place, the storage boxes in the world and more.
+> - You can change the assignment column and faces, tooltips, completion and assignment notices, the wheel steps, whether the hand-in step is used, the HUD (remaining items) and its place, the storage boxes in the world, whether your ender chest is counted, and more.
 > - The "Hotkeys" tab sets keys for the settings screen, the schematic screen, raw materials, toggling the column, toggling the corner list, taking the item you hold, undo, cycling the filter, storage corners A and B, clearing the corner marks, and this guide.
 >
 > </details>
@@ -844,6 +889,7 @@ Press an entry to open its explanation and pictures.
 > | Select the same-named schematic automatically | Selects the schematic named like the schematic when you open its material list. |
 > | Notify when done | Shows a notice in the corner of the screen when materials or the whole schematic are complete. |
 > | Update my collected counts automatically | Raises your collected counts to what you carry, even while no screen is open (never lowers them). |
+> | Count my ender chest too | Also counts what lies in your ender chest (shulker boxes inside included) as what you have: in the tooltips, the automatic collected counts and [Take what I carry]. |
 > | Wheel step | Amount changed per wheel step over an assignee. |
 > | Wheel step with Shift | Amount changed per wheel step with Shift held (64 = one stack). |
 > | Open the settings screen | Opens this settings screen. |

@@ -26,9 +26,13 @@ public final class HudOverlay {
     }
 
     static List<Line> lines(Project project, UUID self, int max) {
+        var zone = ClientProjectCache.chosenZone(project.name());
         List<Map.Entry<String, Entry>> mine = new ArrayList<>();
         for (Map.Entry<String, Entry> item : project.items().entrySet()) {
             Entry e = item.getValue();
+            if (zone.isPresent() && !zone.get().needs(item.getKey())) {
+                continue; // only what the chosen zone needs
+            }
             Integer collected = e.claims().get(self);
             int goal = e.targetOf(self) > 0 ? e.targetOf(self) : e.required();
             // your own share is done once you reach your promised amount, even if the item as a whole is not
@@ -79,9 +83,10 @@ public final class HudOverlay {
             return null;
         }
         List<Line> lines = lines(project.get(), self, Configs.Generic.HUD_LINES.getIntegerValue());
-        int percent = project.get().totalRequired() == 0 ? 0
+        var zone = ClientProjectCache.chosenZone(project.get().name());
+        int percent = zone.isPresent() ? zone.get().percent(project.get()) : project.get().totalRequired() == 0 ? 0
                 : (int) (100L * project.get().totalCollected() / project.get().totalRequired());
-        String title = project.get().name() + "  §7" + percent + "%";
+        String title = project.get().name() + (zone.isPresent() ? " §e[" + zone.get().name() + "]§r" : "") + "  §7" + percent + "%";
         return layoutOf(client, title, lines);
     }
 
