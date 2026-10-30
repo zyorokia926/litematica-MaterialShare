@@ -16,7 +16,7 @@
 > 機能が多いので、**Ctrl + F** で探したい機能(例: 「保管場所」)を検索してください。下の「機能の一覧」の「↓」からも、その機能にジャンプできます。
 
 **「誰が、どの素材を、いくつ集めるか」を、サーバーの全員で共有する Litematica のアドオンです。**
-(Fabric / Minecraft 1.16・1.16.1・1.16.2・1.16.3・1.16.4・1.16.5・1.17・1.17.1・1.18・1.18.1・1.18.2・1.19・1.19.1・1.19.2・1.19.3・1.19.4・1.20.1・1.20.2・1.20.3・1.20.4・1.20.5・1.20.6・1.21・1.21.1)
+(Fabric / Minecraft 1.16・1.16.1・1.16.2・1.16.3・1.16.4・1.16.5・1.17・1.17.1・1.18・1.18.1・1.18.2・1.19・1.19.1・1.19.2・1.19.3・1.19.4・1.20.1・1.20.2・1.20.3・1.20.4・1.20.5・1.20.6・1.21・1.21.1・1.21.2・1.21.3・1.21.4・1.21.5・1.21.6・1.21.7・1.21.8・1.21.9・1.21.10)
 
 建築プロジェクトを複数人で進めるとき、Litematica のマテリアルリストを見ながら「その素材は誰が集めるの?」「あと何個足りない?」を、チャットや口頭で確認していませんか。
 このアドオンは、マテリアルリストの各行に**担当者と収集数**を表示して、全員の画面でそろえます。
@@ -247,7 +247,7 @@
 > <img src="src/main/resources/assets/litematica_materialshare/textures/gui/help/ja/zone_list.png" width="640" alt="ゾーン(段ごとに集める) (zone_list)">
 >
 > - 大きな設計図を、高さ(段)で区切って、少しずつ集められます。「今夜は 1〜10 段目の土台だけ」のように使います。
-> 1. 設置した設計図のマテリアルリストで[ツール]を開き、「見る」のタブの[ゾーン (0)]を押して、、[ゾーンを追加]を押します。
+> 1. 設置した設計図のマテリアルリストで[ツール]を開き、「見る」のタブの[ゾーン (0)]を押して、[ゾーンを追加]を押します。
 > 2. 「1-10 土台」のように、段の範囲と名前を入れます。段は、設計図のいちばん下を 1 段目として数えます(置いた場所の高さは関係ありません)。その段に要る素材が設計図から数えられ、サーバーの全員と共有されます。
 > 3. ゾーンの[選ぶ]を押すと、マテリアルリストと HUD(残り表示)が、そのゾーンに要る素材だけになります。HUD の題名にゾーンの名前と進み具合が出て、素材の行のツールチップに「ゾーン「土台」: 集めた数/必要数」が出ます。どのゾーンを選ぶかは、自分だけの設定です。[絞り込みをやめる]で全体に戻ります。
 > - 担当と集めた数は、ゾーンに分かれず、設計図全体で1つのままです。ゾーンの進み具合は、素材ごとに「集めた数(ゾーンの必要数まで)」を足して出します。ゾーンは1つの設計図に16個まで作れ、[消す]で全員から消えます。
@@ -311,6 +311,8 @@
 >
 > - ツールの「原材料」は、クラフトのレシピをたどって、必要な素材を作るための元の材料の数を計算します。色分けしたマップで、設計図 → 作る素材 → 途中の素材 → 元の材料 の流れを見られます。
 > - 「残りで計算」と「全体で計算」を切り替えられ、「原材料の合計(一覧)」で元の材料だけの一覧も見られます。かまどで焼くものや拾うものは、そこで止まります。ホットキーで直接開くこともできます。
+>
+> ⚠️ **ver ごとの注意**: Minecraft 1.21.2 以降は、サーバーがレシピをプレイヤーに送りません。原材料の分解図は、1人用と、LAN に公開した人では使えますが、マルチのサーバーでは空になることがあります。
 >
 > </details>
 
@@ -459,12 +461,21 @@
 | 1.20.6 | 0.18.x(確認: 0.18.3) | 0.19.x(確認: 0.19.2) | `...-0.11.0+1.20.6.jar` |
 | 1.21 | 0.19.x(確認: 0.19.61) | 0.21.x(確認: 0.21.10) | `...-0.11.0+1.21.jar` |
 | 1.21.1 | 0.19.x(確認: 0.19.61) | 0.21.x(確認: 0.21.10) | `...-0.11.0+1.21.1.jar` |
+| 1.21.2 | 0.20.x(確認: 0.20.9) | 0.22.x(確認: 0.22.8) | `...-0.11.0+1.21.2.jar` |
+| 1.21.3 | 0.20.x(確認: 0.20.9) | 0.22.x(確認: 0.22.8) | `...-0.11.0+1.21.3.jar` |
+| 1.21.4 | 0.21.x(確認: 0.21.7) | 0.23.x(確認: 0.23.5) | `...-0.11.0+1.21.4.jar` |
+| 1.21.5 | 0.22.x(確認: 0.22.5) | 0.24.x(確認: 0.24.3) | `...-0.11.0+1.21.5.jar` |
+| 1.21.6 | 0.23.x(確認: 0.23.7) | 0.25.x(確認: 0.25.7) | `...-0.11.0+1.21.6.jar` |
+| 1.21.7 | 0.23.x(確認: 0.23.7) | 0.25.x(確認: 0.25.7) | `...-0.11.0+1.21.7.jar` |
+| 1.21.8 | 0.23.x(確認: 0.23.7) | 0.25.x(確認: 0.25.7) | `...-0.11.0+1.21.8.jar` |
+| 1.21.9 | 0.24.x(確認: 0.24.9) | 0.26.x(確認: 0.26.8) | `...-0.11.0+1.21.9.jar` |
+| 1.21.10 | 0.24.x(確認: 0.24.9) | 0.26.x(確認: 0.26.8) | `...-0.11.0+1.21.10.jar` |
 
 Syncmatica はどのverでも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 は 0.58.0 以上、1.18 と 1.18.1 は 0.44.0 以上)。
 
 1.20.x の Fabric API: 1.20.1 は 0.92.2 以上、1.20.2 は 0.91.6 以上、1.20.3 は 0.91.1 以上、1.20.4 は 0.97.2 以上、1.20.5 は 0.97.8 以上、1.20.6 は 0.100.8 以上。Minecraft 1.20.5 と 1.20.6 は Java 21 が必要です。Minecraft 1.20 そのものの jar はありません(Litematica に 1.20 用の build が無いため。1.20.1 を使ってください)。
 
-1.16〜1.17.1 と 1.21 系の Fabric API: 1.16 は 0.13.1 以上、1.16.1 は 0.18.0 以上、1.16.2〜1.16.5 は **0.42.0 以上**(1.16.2〜1.16.4 でも、1.16.5 用の 0.42.0+1.16 を入れてください。その ver 用の Fabric API では動きません)、1.17 は 0.36.0 以上、1.17.1 は 0.46.1 以上、1.21 は 0.102.0 以上、1.21.1 は 0.116.17 以上。Minecraft 1.16〜1.16.5 は **Java 17** で起動してください(ランチャーの初期設定の Java 8 では動きません)。1.17 と 1.17.1 は Java 16 以上、1.21 と 1.21.1 は Java 21。1.21 と 1.21.1 の Syncmatica(0.3.14)は **Fabric Permissions API** が必要です(少なくともサーバーに)。1.16〜1.17 の Syncmatica は 0.3.8 で確認しました。1.17 の malilib は beta のみです。
+1.16〜1.17.1 と 1.21 系の Fabric API: 1.16 は 0.13.1 以上、1.16.1 は 0.18.0 以上、1.16.2〜1.16.5 は **0.42.0 以上**(1.16.2〜1.16.4 でも、1.16.5 用の 0.42.0+1.16 を入れてください。その ver 用の Fabric API では動きません)、1.17 は 0.36.0 以上、1.17.1 は 0.46.1 以上、1.21 は 0.102.0 以上、1.21.1 は 0.116.17 以上、1.21.2 は 0.106.1 以上、1.21.3 は 0.114.1 以上、1.21.4 は 0.119.4 以上、1.21.5 は 0.128.2 以上、1.21.6 は 0.128.2 以上、1.21.7 は 0.129.0 以上、1.21.8 は 0.136.1 以上、1.21.9 は 0.134.1 以上、1.21.10 は 0.138.4 以上。Minecraft 1.16〜1.16.5 は **Java 17** で起動してください(ランチャーの初期設定の Java 8 では動きません)。1.17 と 1.17.1 は Java 16 以上、1.21〜1.21.10 は Java 21。1.21 以降の Syncmatica(確認: 1.21〜1.21.5 は 0.3.14、1.21.6〜1.21.8 は 0.3.15、1.21.9 と 1.21.10 は 0.3.16)には、**Fabric Permissions API** も入れてください(少なくともサーバーに)。1.16〜1.17 の Syncmatica は 0.3.8 で確認しました。1.17 の malilib は beta のみです。
 
 - サーバーとクライアントの**両方**に、同じ jar を入れます。
 - 担当管理を始めるには、設計図が **Syncmatica で共有**されている必要があります。共有されていれば、マテリアルリストを開くと自動で担当管理が始まります。
@@ -494,6 +505,7 @@ Syncmatica はどのverでも可。Fabric API は 0.76.0 以上(1.19 と 1.19.1 
 - Java: 1.16〜1.16.5 は **Java 17** で起動、1.17 と 1.17.1 は Java 16 以上、1.18〜1.20.4 は Java 17、1.20.5 以降は **Java 21**。
 - 1.16 と 1.16.1 では、参加するときの「MODの ver が合っているか」の確認がありません(その ver の Fabric API に、参加の途中で通信する仕組みが無いため)。全員が同じ jar を使ってください。
 - Minecraft 1.20 そのものの jar はありません(1.20.1 を使ってください)。
+- 1.21.2 以降は、サーバーがレシピをプレイヤーに送りません。原材料の分解図は、マルチのサーバーでは空になることがあります(1人用と、LAN に公開した人では使えます)。
 - 1.19.4 の jar だけ、名前に ver が付きません(`...-0.11.0+1.19.4.jar`)。
 - 機能がverによって違うことが分かったときは、その機能の説明の中に「ver ごとの注意」を書きます。
 
@@ -524,7 +536,7 @@ Litematica / malilib の画面には mixin の `@Inject` だけで追加して�
 > Many features: press **Ctrl + F** to search for the one you want (for example "storage"), or use the "↓" links in the "Features" table below.
 
 **An add-on for Litematica that shows who collects which material, and how much, to everybody on the server.**
-(Fabric / Minecraft 1.16, 1.16.1, 1.16.2, 1.16.3, 1.16.4, 1.16.5, 1.17, 1.17.1, 1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.3, 1.20.4, 1.20.5, 1.20.6, 1.21, 1.21.1)
+(Fabric / Minecraft 1.16, 1.16.1, 1.16.2, 1.16.3, 1.16.4, 1.16.5, 1.17, 1.17.1, 1.18, 1.18.1, 1.18.2, 1.19, 1.19.1, 1.19.2, 1.19.3, 1.19.4, 1.20.1, 1.20.2, 1.20.3, 1.20.4, 1.20.5, 1.20.6, 1.21, 1.21.1, 1.21.2, 1.21.3, 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10)
 
 Building together, you keep asking "who takes the redstone?" and "how many oak logs are still missing?" in chat.
 This add-on puts **who takes an item and how much they have collected** right into each row of Litematica's material list, the same for every player.
@@ -819,6 +831,8 @@ Press an entry to open its explanation and pictures.
 > - "Raw materials" in the tools follows the crafting recipes and works out the raw materials needed. A colour-coded map shows schematic > crafted items > intermediate items > raw materials.
 > - Switch between "remaining" and "everything", or open the plain list of raw materials. Things that are smelted or found stop the chain. A hotkey opens it directly.
 >
+> ⚠️ **Note for some versions**: From Minecraft 1.21.2 on, the server no longer sends the recipes to the players. The breakdown works in single player and for the player who opened the world to LAN, but may stay empty on a multiplayer server.
+>
 > </details>
 
 <a id="f-en-manage"></a>
@@ -966,12 +980,21 @@ Press an entry to open its explanation and pictures.
 | 1.20.6 | 0.18.x (tested: 0.18.3) | 0.19.x (tested: 0.19.2) | `...-0.11.0+1.20.6.jar` |
 | 1.21 | 0.19.x (tested: 0.19.61) | 0.21.x (tested: 0.21.10) | `...-0.11.0+1.21.jar` |
 | 1.21.1 | 0.19.x (tested: 0.19.61) | 0.21.x (tested: 0.21.10) | `...-0.11.0+1.21.1.jar` |
+| 1.21.2 | 0.20.x (tested: 0.20.9) | 0.22.x (tested: 0.22.8) | `...-0.11.0+1.21.2.jar` |
+| 1.21.3 | 0.20.x (tested: 0.20.9) | 0.22.x (tested: 0.22.8) | `...-0.11.0+1.21.3.jar` |
+| 1.21.4 | 0.21.x (tested: 0.21.7) | 0.23.x (tested: 0.23.5) | `...-0.11.0+1.21.4.jar` |
+| 1.21.5 | 0.22.x (tested: 0.22.5) | 0.24.x (tested: 0.24.3) | `...-0.11.0+1.21.5.jar` |
+| 1.21.6 | 0.23.x (tested: 0.23.7) | 0.25.x (tested: 0.25.7) | `...-0.11.0+1.21.6.jar` |
+| 1.21.7 | 0.23.x (tested: 0.23.7) | 0.25.x (tested: 0.25.7) | `...-0.11.0+1.21.7.jar` |
+| 1.21.8 | 0.23.x (tested: 0.23.7) | 0.25.x (tested: 0.25.7) | `...-0.11.0+1.21.8.jar` |
+| 1.21.9 | 0.24.x (tested: 0.24.9) | 0.26.x (tested: 0.26.8) | `...-0.11.0+1.21.9.jar` |
+| 1.21.10 | 0.24.x (tested: 0.24.9) | 0.26.x (tested: 0.26.8) | `...-0.11.0+1.21.10.jar` |
 
 Syncmatica: any version. Fabric API: 0.76.0 or newer (1.19 and 1.19.1: 0.58.0 or newer; 1.18 and 1.18.1: 0.44.0 or newer).
 
 Fabric API for 1.20.x: 1.20.1 0.92.2 or newer, 1.20.2 0.91.6, 1.20.3 0.91.1, 1.20.4 0.97.2, 1.20.5 0.97.8, 1.20.6 0.100.8 (each or newer). Minecraft 1.20.5 and 1.20.6 need Java 21. There is no jar for Minecraft 1.20 itself, because Litematica has no build for it (use 1.20.1).
 
-Fabric API for 1.16 to 1.17.1 and 1.21.x: 1.16 0.13.1 or newer, 1.16.1 0.18.0, 1.16.2 to 1.16.5 **0.42.0** (on 1.16.2 to 1.16.4 too, install 0.42.0+1.16, the one for 1.16.5; the Fabric API made for those versions does not work), 1.17 0.36.0, 1.17.1 0.46.1, 1.21 0.102.0, 1.21.1 0.116.17 (each or newer). Start Minecraft 1.16 to 1.16.5 with **Java 17** (the default Java 8 of the launcher does not work). 1.17 and 1.17.1 need Java 16 or newer, 1.21 and 1.21.1 Java 21. Syncmatica 0.3.14 for 1.21 and 1.21.1 needs the **Fabric Permissions API** (at least on the server). Syncmatica for 1.16 to 1.17 was tested with 0.3.8. malilib for 1.17 exists only as a beta.
+Fabric API for 1.16 to 1.17.1 and 1.21.x: 1.16 0.13.1 or newer, 1.16.1 0.18.0, 1.16.2 to 1.16.5 **0.42.0** (on 1.16.2 to 1.16.4 too, install 0.42.0+1.16, the one for 1.16.5; the Fabric API made for those versions does not work), 1.17 0.36.0, 1.17.1 0.46.1, 1.21 0.102.0, 1.21.1 0.116.17, 1.21.2 0.106.1, 1.21.3 0.114.1, 1.21.4 0.119.4, 1.21.5 0.128.2, 1.21.6 0.128.2, 1.21.7 0.129.0, 1.21.8 0.136.1, 1.21.9 0.134.1, 1.21.10 0.138.4 (each or newer). Start Minecraft 1.16 to 1.16.5 with **Java 17** (the default Java 8 of the launcher does not work). 1.17 and 1.17.1 need Java 16 or newer, 1.21 to 1.21.10 Java 21. With Syncmatica for 1.21 and later (tested: 0.3.14 for 1.21 to 1.21.5, 0.3.15 for 1.21.6 to 1.21.8, 0.3.16 for 1.21.9 and 1.21.10), also install the **Fabric Permissions API** (at least on the server). Syncmatica for 1.16 to 1.17 was tested with 0.3.8. malilib for 1.17 exists only as a beta.
 
 - Put the same jar on the server **and** on every client.
 - A schematic must be **shared with Syncmatica** to be tracked; open its material list and tracking starts by itself.
@@ -1001,6 +1024,7 @@ All versions are built from the same source, so the features are the same. What 
 - Java: start 1.16 to 1.16.5 with **Java 17**; 1.17 and 1.17.1 need Java 16 or newer, 1.18 to 1.20.4 Java 17, 1.20.5 and later **Java 21**.
 - On 1.16 and 1.16.1 there is no check of the mod version while joining (the Fabric API of those versions cannot talk during the login). Everybody must use the same jar.
 - There is no jar for Minecraft 1.20 itself (use 1.20.1).
+- From 1.21.2 on, the server no longer sends the recipes to the players: the material breakdown may stay empty on a multiplayer server (it works in single player and for the player who opened the world to LAN).
 - Only the 1.19.4 jar has no version in its name (`...-0.11.0+1.19.4.jar`).
 - When a feature turns out to work differently on some version, a "Note for some versions" is written inside that feature's explanation.
 
