@@ -1035,7 +1035,7 @@ Litematica / malilib screens are only extended with mixin `@Inject`s; nothing of
 ## ライセンスとリンク / License and links
 
 - ライセンス: All Rights Reserved(LICENSE を見てください)/ License: All Rights Reserved (see LICENSE)
-- Modrinth: https://modrinth.com/mod/litematica-materialshare
+- Modrinth: https://modrinth.com/mod/litematica-material_list_share
 - バグ報告・要望 / Issues: https://github.com/zyorokia926/litematica-MaterialShare/issues
 - Litematica の作者とは関係のない、非公式のアドオンです。/ An unofficial add-on, not affiliated with the authors of Litematica.
 
